@@ -145,7 +145,8 @@ export default function ReactionGame() {
             onClick={handleAreaClick}
             role="button"
             tabIndex={0}
-            onKeyDown={(e) => e.key === ' ' && handleAreaClick()}
+            aria-label={phase === 'waiting' ? 'Area klik — tunggu dulu' : 'Klik sekarang!'}
+            onKeyDown={(e) => (e.key === ' ' || e.key === 'Enter') && handleAreaClick()}
             className={cn(
               'w-full h-64 rounded-2xl flex flex-col items-center justify-center cursor-pointer select-none transition-colors',
               phase === 'waiting' && 'bg-gray-200 dark:bg-gray-700',
