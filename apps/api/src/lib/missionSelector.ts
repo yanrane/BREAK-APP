@@ -4,7 +4,12 @@ export interface MissionPool {
 }
 
 function shuffle<T>(arr: T[]): T[] {
-  return [...arr].sort(() => Math.random() - 0.5);
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
 }
 
 /**
@@ -43,7 +48,7 @@ export function selectDailyMissions(pool: MissionPool[]): MissionPool[] {
   pickFrom(mental);
   pickFrom(socialCreative);
 
-  // Fill remaining slots from any unselected mission (fallback for empty category buckets)
+  // Phase 1 graceful degradation: fill remaining slots from any category when required buckets are empty.
   if (selected.length < 3) {
     for (const m of shuffle(pool.filter((item) => !selectedIds.has(item.id)))) {
       if (selected.length >= 3) break;
