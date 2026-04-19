@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  username      String   @unique
+  passwordHash  String
+  avatarUrl     String?
+  totalPoints   Int      @default(0)
+  currentStreak Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  missions      UserMission[]
+  usageLogs     UsageLog[]
+  gameScores    GameScore[]
+  settings      UserSettings?
+}
+
+model UserSettings {
+  userId              String   @id
+  user                User     @relation(fields: [userId], references: [id])
+  dailyLimitMinutes   Int      @default(60)
+  trackedDomains      String[]
+  notificationEnabled Boolean  @default(true)
+  telegramChatId      String?
+}
+
+model Mission {
+  id            String          @id @default(cuid())
+  slug          String          @unique
+  title         String
+  description   String
+  category      MissionCategory
+  points        Int
+  requiresProof Boolean         @default(true)
+  cooldownHours Int             @default(24)
+  isActive      Boolean         @default(true)
+
+  userMissions  UserMission[]
+}
+
+model UserMission {
+  id           String        @id @default(cuid())
+  userId       String
+  missionId    String
+  status       MissionStatus
+  proofUrl     String?
+  pointsEarned Int           @default(0)
+  assignedAt   DateTime      @default(now())
+  completedAt  DateTime?
+  verifiedAt   DateTime?
+
+  user         User          @relation(fields: [userId], references: [id])
+  mission      Mission       @relation(fields: [missionId], references: [id])
+
+  @@index([userId, assignedAt])
+}
+
+model UsageLog {
+  id       String   @id @default(cuid())
+  userId   String
+  domain   String
+  seconds  Int
+  loggedAt DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, loggedAt])
+}
+
+model GameScore {
+  id       String   @id @default(cuid())
+  userId   String
+  gameType GameType
+  score    Int
+  playedAt DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id])
+}
+
+enum MissionCategory {
+  PHYSICAL
+  MENTAL
+  SOCIAL
+  CREATIVE
+}
+
+enum MissionStatus {
+  ASSIGNED
+  COMPLETED
+  VERIFIED
+  REJECTED
+}
+
+enum GameType {
+  REACTION
+  FAST_CLICK
+  PATTERN_MATCH
+}
