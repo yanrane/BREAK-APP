@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.ts",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "src/**",
+          "prisma/schema.prisma",
+          "node_modules/.prisma/**",
+          "node_modules/@prisma/client/**"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.ts"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/v1/cron/daily-missions",
+      "schedule": "0 17 * * *"
+    }
+  ]
+}

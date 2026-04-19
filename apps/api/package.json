@@ -12,7 +12,8 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:migrate": "prisma migrate dev",
     "db:seed": "ts-node-dev --transpile-only --no-notify prisma/seed.ts",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@break/shared": "workspace:*",
@@ -31,7 +32,8 @@
     "multer": "^2.1.1",
     "node-cron": "^4.2.1",
     "uuid": "^13.0.0",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@vercel/blob": "^0.27.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

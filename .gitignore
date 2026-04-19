@@ -4,3 +4,8 @@ dist/
 apps/api/uploads/
 *.log
 .DS_Store
+
+# Screenshots & Playwright artifacts
+*.png
+*.jpeg
+.playwright-mcp/

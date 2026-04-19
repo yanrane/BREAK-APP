@@ -9,7 +9,7 @@ import { AppError } from '../lib/appError';
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_SIZE_BYTES = (parseInt(process.env.MAX_UPLOAD_MB ?? '5', 10)) * 1024 * 1024;
 
-// Use memory storage so we can validate magic bytes before writing to disk
+// Use memory storage so we can validate magic bytes before persisting
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_SIZE_BYTES },
@@ -22,7 +22,6 @@ const upload = multer({
   },
 });
 
-// Attach multer as first step, then validate magic bytes, then write to disk
 export const uploadProofMiddleware: RequestHandler[] = [
   upload.single('proof'),
   async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
@@ -36,18 +35,28 @@ export const uploadProofMiddleware: RequestHandler[] = [
         return next(new AppError(400, 'INVALID_FILE_TYPE', 'Format file tidak valid'));
       }
 
-      const uploadDir = process.env.UPLOAD_DIR ?? './uploads';
-      await fsp.mkdir(uploadDir, { recursive: true });
-
       const filename = `${uuidv4()}.${detected.ext}`;
-      const filepath = path.join(uploadDir, filename);
-      await fsp.writeFile(filepath, req.file.buffer);
 
-      // Attach the saved path to req for use in the route handler
-      req.proofPath = `/uploads/${filename}`;
+      if (process.env.BLOB_READ_WRITE_TOKEN) {
+        // Vercel Blob Storage (production)
+        const { put } = await import('@vercel/blob');
+        const blob = await put(`proofs/${filename}`, req.file.buffer, {
+          access: 'public',
+          contentType: detected.mime,
+        });
+        req.proofPath = blob.url;
+      } else {
+        // Local disk storage (development)
+        const uploadDir = process.env.UPLOAD_DIR ?? './uploads';
+        await fsp.mkdir(uploadDir, { recursive: true });
+        const filepath = path.join(uploadDir, filename);
+        await fsp.writeFile(filepath, req.file.buffer);
+        req.proofPath = `/uploads/${filename}`;
+      }
+
       next();
     } catch (err) {
-      console.error('[uploadProof] Failed to write file:', err);
+      console.error('[uploadProof] Failed to upload file:', err);
       next(new AppError(500, 'UPLOAD_FAILED', 'Gagal menyimpan file'));
     }
   },
