@@ -27,9 +27,11 @@ app.use('/uploads', requireAuth, express.static(uploadDir));
 app.use('/api/v1', router);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`API server running on http://localhost:${PORT}`);
-  startDailyMissionsCron();
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`API server running on http://localhost:${PORT}`);
+    startDailyMissionsCron();
+  });
+}
 
 export default app;
