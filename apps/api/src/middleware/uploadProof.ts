@@ -1,6 +1,6 @@
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
+import { promises as fsp } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { fromBuffer as fileTypeFromBuffer } from 'file-type';
 import { Request, Response, NextFunction, RequestHandler } from 'express';
@@ -37,16 +37,14 @@ export const uploadProofMiddleware: RequestHandler[] = [
       }
 
       const uploadDir = process.env.UPLOAD_DIR ?? './uploads';
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
+      await fsp.mkdir(uploadDir, { recursive: true });
 
       const filename = `${uuidv4()}.${detected.ext}`;
       const filepath = path.join(uploadDir, filename);
-      fs.writeFileSync(filepath, req.file.buffer);
+      await fsp.writeFile(filepath, req.file.buffer);
 
       // Attach the saved path to req for use in the route handler
-      (req as Request & { proofPath: string }).proofPath = `/uploads/${filename}`;
+      req.proofPath = `/uploads/${filename}`;
       next();
     } catch {
       next(new AppError(500, 'UPLOAD_FAILED', 'Gagal menyimpan file'));
