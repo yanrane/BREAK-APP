@@ -69,8 +69,11 @@ export async function getLeaderboard(
   });
   const userMap = new Map(users.map((u) => [u.id, u]));
 
-  return sorted.map(([userId, points], idx) => {
-    const u = userMap.get(userId)!;
-    return { rank: idx + 1, userId, username: u.username, avatarUrl: u.avatarUrl, points };
-  });
+  return sorted
+    .map(([userId, points], idx) => {
+      const u = userMap.get(userId);
+      if (!u) return null;
+      return { rank: idx + 1, userId, username: u.username, avatarUrl: u.avatarUrl, points };
+    })
+    .filter((entry): entry is LeaderboardEntry => entry !== null);
 }
