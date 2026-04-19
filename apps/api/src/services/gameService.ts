@@ -1,6 +1,5 @@
 import { GameType } from '@prisma/client';
 import prisma from '../lib/prisma';
-import { AppError } from '../lib/appError';
 import { getWIBStartOfDay } from '../lib/dateUtils';
 
 const DAILY_CAP = 20;
@@ -68,21 +67,29 @@ export async function submitScore(
 }
 
 export async function getMyStats(userId: string) {
-  const scores = await prisma.gameScore.findMany({
-    where: { userId },
-    orderBy: { playedAt: 'desc' },
-  });
+  const [grouped, recentScores] = await Promise.all([
+    prisma.gameScore.groupBy({
+      by: ['gameType'],
+      where: { userId },
+      _max: { score: true },
+      _sum: { pointsEarned: true },
+      _count: { id: true },
+    }),
+    prisma.gameScore.findMany({
+      where: { userId },
+      orderBy: { playedAt: 'desc' },
+      take: 10,
+    }),
+  ]);
 
   const byType: Record<string, { bestScore: number; totalSessions: number; totalPointsEarned: number }> = {};
-  for (const s of scores) {
-    if (!byType[s.gameType]) {
-      byType[s.gameType] = { bestScore: 0, totalSessions: 0, totalPointsEarned: 0 };
-    }
-    const entry = byType[s.gameType];
-    entry.totalSessions += 1;
-    entry.totalPointsEarned += s.pointsEarned;
-    if (s.score > entry.bestScore) entry.bestScore = s.score;
+  for (const row of grouped) {
+    byType[row.gameType] = {
+      bestScore: row._max.score ?? 0,
+      totalSessions: row._count.id,
+      totalPointsEarned: row._sum.pointsEarned ?? 0,
+    };
   }
 
-  return { byType, recentScores: scores.slice(0, 10) };
+  return { byType, recentScores };
 }
