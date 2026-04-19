@@ -63,8 +63,8 @@ export default function Landing() {
       </section>
 
       {/* ── STATS BAND ── */}
-      <section className="border-y-2 border-ink bg-lime -mx-5 px-5 py-10">
-        <div className="max-w-3xl grid grid-cols-3 gap-6">
+      <section className="border-y-2 border-ink bg-lime py-10 max-w-3xl">
+        <div className="grid grid-cols-3 gap-6">
           {STATS.map((s) => (
             <div key={s.value}>
               <p className="text-5xl md:text-6xl font-extrabold text-ink leading-none">{s.value}</p>
