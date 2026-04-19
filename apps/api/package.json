@@ -8,8 +8,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:unit": "vitest run --reporter=verbose src/**/*.test.ts",
-    "test:integration": "vitest run --reporter=verbose src/**/*.integration.test.ts",
+    "test:unit": "vitest run --config vitest.config.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:migrate": "prisma migrate dev",
     "db:seed": "ts-node prisma/seed.ts",
     "db:generate": "prisma generate"
