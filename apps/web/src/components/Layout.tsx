@@ -1,66 +1,81 @@
-import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { useThemeStore } from '../store/useThemeStore';
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import { cn } from '../lib/cn';
 
+const NAV_LINKS = [
+  { to: '/dashboard', label: 'Dashboard' },
+  { to: '/missions', label: 'Misi' },
+  { to: '/leaderboard', label: 'Ranking' },
+  { to: '/games', label: 'Games' },
+];
+
 export default function Layout() {
-  const { isDark, toggle } = useThemeStore();
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
-      <nav className="border-b border-gray-200 dark:border-gray-800 px-6 py-3 flex items-center justify-between">
-        <Link to="/" className="text-xl font-bold text-brand-600 dark:text-brand-500">
-          BREAK
-        </Link>
-        <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-cream text-ink">
+      <header className="sticky top-0 z-40 bg-cream border-b-2 border-ink">
+        <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between gap-6">
+          <Link
+            to="/"
+            className="text-xl font-extrabold tracking-tight shrink-0 hover:text-muted transition-colors"
+          >
+            BREAK
+          </Link>
+
           {user ? (
-            <>
-              <Link to="/dashboard" className="text-sm hover:underline">Dashboard</Link>
-              <Link to="/missions" className="text-sm hover:underline">Misi</Link>
-              <Link to="/leaderboard" className="text-sm hover:underline">Leaderboard</Link>
-              <Link to="/games" className="text-sm hover:underline">Games</Link>
-              <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:inline">
+            <nav className="flex items-center gap-1">
+              {NAV_LINKS.map(({ to, label }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className={cn(
+                    'px-3 py-1.5 text-sm font-semibold rounded transition-colors',
+                    pathname === to
+                      ? 'bg-ink text-cream'
+                      : 'hover:bg-cream-2 text-ink',
+                  )}
+                >
+                  {label}
+                </Link>
+              ))}
+              <span className="text-muted text-xs ml-2 hidden sm:inline font-medium">
                 {user.username}
               </span>
               <button
                 onClick={handleLogout}
-                className="text-sm text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                className="ml-1 px-3 py-1.5 text-sm font-semibold text-muted hover:text-ink transition-colors"
               >
                 Keluar
               </button>
-            </>
+            </nav>
           ) : (
-            <>
-              <Link to="/login" className="text-sm hover:underline">Masuk</Link>
+            <nav className="flex items-center gap-2">
+              <Link
+                to="/login"
+                className="px-4 py-1.5 text-sm font-semibold hover:text-muted transition-colors"
+              >
+                Masuk
+              </Link>
               <Link
                 to="/register"
-                className="text-sm px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium transition-colors"
+                className="px-4 py-1.5 text-sm font-bold border-2 border-ink bg-ink text-cream shadow-hard-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100"
               >
                 Daftar
               </Link>
-            </>
+            </nav>
           )}
-          <button
-            onClick={toggle}
-            className={cn(
-              'px-3 py-1 rounded-md text-sm border',
-              'border-gray-300 dark:border-gray-600',
-              'hover:bg-gray-100 dark:hover:bg-gray-800',
-            )}
-            aria-label="Toggle dark mode"
-          >
-            {isDark ? '☀️' : '🌙'}
-          </button>
         </div>
-      </nav>
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      </header>
+
+      <main className="max-w-5xl mx-auto px-5 py-10">
         <Outlet />
       </main>
     </div>

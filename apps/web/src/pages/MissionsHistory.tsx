@@ -10,11 +10,11 @@ const STATUS_LABEL: Record<string, string> = {
   REJECTED: 'Ditolak',
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  ASSIGNED: 'text-gray-500',
-  COMPLETED: 'text-yellow-600',
-  VERIFIED: 'text-green-600',
-  REJECTED: 'text-red-500',
+const STATUS_STYLE: Record<string, string> = {
+  ASSIGNED: 'bg-cream-2 text-muted border-ink/30',
+  COMPLETED: 'bg-[#FFF9C4] text-[#854D0E] border-[#854D0E]',
+  VERIFIED: 'bg-lime text-ink border-ink',
+  REJECTED: 'bg-red-100 text-coral border-coral',
 };
 
 const LIMIT = 20;
@@ -22,90 +22,86 @@ const LIMIT = 20;
 export default function MissionsHistory() {
   const [page, setPage] = useState(1);
   const { result, loading, error } = useMissionHistory(page, LIMIT);
-
   const totalPages = result ? Math.ceil(result.total / LIMIT) : 0;
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-8">
-      <div className="flex items-center gap-3 mb-6">
-        <Link to="/missions" className="text-gray-400 hover:text-gray-600">
+    <div className="max-w-xl">
+      <div className="flex items-center gap-3 border-b-2 border-ink pb-5 mb-6">
+        <Link
+          to="/missions"
+          className="text-sm font-extrabold border-2 border-ink px-2.5 py-1 shadow-hard-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100"
+        >
           ←
         </Link>
-        <h1 className="text-2xl font-bold">Riwayat Misi</h1>
+        <div>
+          <p className="text-label mb-0.5">Catatan</p>
+          <h1 className="text-3xl font-extrabold leading-none">Riwayat Misi</h1>
+        </div>
       </div>
 
       {loading && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-20 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />
+            <div key={i} className="h-20 border-2 border-ink/20 bg-cream-2 animate-pulse" />
           ))}
         </div>
       )}
 
       {error && (
-        <p className="text-center text-gray-500 py-8">{error}</p>
+        <div className="border-2 border-ink p-8 shadow-hard text-center">
+          <p className="text-muted font-semibold">{error}</p>
+        </div>
       )}
 
       {!loading && !error && result && result.items.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-3xl mb-3">📜</p>
-          <p className="text-gray-500 text-sm">Belum ada riwayat misi.</p>
-          <Link to="/missions" className="text-sm text-brand-600 hover:underline mt-2 inline-block">
-            Lihat misi hari ini
+        <div className="border-2 border-ink p-10 shadow-hard text-center">
+          <p className="text-4xl mb-4">📜</p>
+          <p className="font-extrabold text-lg mb-1">Belum ada riwayat</p>
+          <Link to="/missions" className="text-sm font-extrabold underline decoration-lime decoration-2">
+            Lihat misi hari ini →
           </Link>
         </div>
       )}
 
       {!loading && !error && result && result.items.length > 0 && (
         <>
-          <div className="space-y-3">
+          <div className="border-2 border-ink shadow-hard divide-y-2 divide-ink">
             {result.items.map((um) => (
-              <div
-                key={um.id}
-                className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-semibold">{um.mission.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {new Date(um.assignedAt).toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className={cn('text-xs font-medium', STATUS_COLOR[um.status])}>
-                      {STATUS_LABEL[um.status]}
-                    </p>
-                    {um.pointsEarned > 0 && (
-                      <p className="text-xs text-brand-600 font-semibold">
-                        +{um.pointsEarned} pts
-                      </p>
-                    )}
-                  </div>
+              <div key={um.id} className="flex items-start justify-between gap-3 px-4 py-3 bg-cream hover:bg-cream-2 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-extrabold leading-tight truncate">{um.mission.title}</p>
+                  <p className="text-xs text-muted font-semibold mt-0.5">
+                    {new Date(um.assignedAt).toLocaleDateString('id-ID', {
+                      day: 'numeric', month: 'long', year: 'numeric',
+                    })}
+                  </p>
+                </div>
+                <div className="text-right shrink-0 space-y-1">
+                  <span className={cn('inline-block text-xs font-extrabold px-2 py-0.5 border-2', STATUS_STYLE[um.status])}>
+                    {STATUS_LABEL[um.status]}
+                  </span>
+                  {um.pointsEarned > 0 && (
+                    <p className="text-xs font-extrabold text-ink">+{um.pointsEarned} pts</p>
+                  )}
                 </div>
               </div>
             ))}
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-3 mt-6">
+            <div className="flex items-center justify-between gap-3 mt-5">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-40"
+                className="px-4 py-2 text-sm font-extrabold border-2 border-ink shadow-hard-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100 disabled:opacity-40 disabled:transform-none disabled:shadow-none"
               >
                 ← Sebelumnya
               </button>
-              <span className="text-sm text-gray-500">
-                {page} / {totalPages}
-              </span>
+              <span className="text-sm font-bold text-muted">{page} / {totalPages}</span>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-3 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-40"
+                className="px-4 py-2 text-sm font-extrabold border-2 border-ink shadow-hard-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100 disabled:opacity-40 disabled:transform-none disabled:shadow-none"
               >
                 Berikutnya →
               </button>

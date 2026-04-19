@@ -29,53 +29,60 @@ export default function MissionCard({ userMission, apiBaseUrl = '', onComplete }
   return (
     <div
       className={cn(
-        'rounded-xl border p-4 space-y-3 transition-colors',
-        'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700',
-        isVerified && 'border-green-400 dark:border-green-600',
+        'border-2 border-ink shadow-hard transition-all duration-150',
+        isVerified ? 'bg-lime' : 'bg-cream',
       )}
     >
-      <div className="flex items-start justify-between gap-2">
+      {/* Top stripe for category */}
+      <div className="flex items-center justify-between border-b-2 border-ink px-4 py-2.5">
         <div className="flex items-center gap-2">
-          <span className="text-2xl" aria-hidden="true">
-            {CATEGORY_ICON[mission.category]}
-          </span>
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+          <span className="text-lg" aria-hidden="true">{CATEGORY_ICON[mission.category]}</span>
+          <span className="text-xs font-extrabold uppercase tracking-widest">
             {CATEGORY_LABEL[mission.category]}
           </span>
         </div>
-        <span className="text-sm font-semibold text-brand-600">+{mission.points} pts</span>
+        <span className="text-sm font-extrabold bg-ink text-cream px-2 py-0.5">
+          +{mission.points} pts
+        </span>
       </div>
 
-      <div>
-        <h3 className="font-semibold text-sm">{mission.title}</h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{mission.description}</p>
-      </div>
-
-      {isVerified && proofUrl && (
-        <div className="space-y-2">
-          <img
-            src={`${apiBaseUrl}${proofUrl}`}
-            alt="Bukti misi"
-            className="w-full h-32 object-cover rounded-lg"
-          />
-          <div className="flex items-center gap-1 text-green-600 text-xs font-medium">
-            <span>✓</span>
-            <span>Misi selesai · +{userMission.pointsEarned} poin</span>
-          </div>
+      <div className="p-4 space-y-3">
+        <div>
+          <h3 className="font-extrabold text-base leading-tight">{mission.title}</h3>
+          <p className="text-sm text-muted font-medium mt-1 leading-relaxed">{mission.description}</p>
         </div>
-      )}
 
-      {!isCompleted && (
-        <button
-          onClick={() => onComplete(userMission.id)}
-          className={cn(
-            'w-full py-2 rounded-lg text-sm font-medium text-white transition-colors',
-            'bg-brand-600 hover:bg-brand-700',
-          )}
-        >
-          Selesaikan
-        </button>
-      )}
+        {isVerified && proofUrl && (
+          <div className="space-y-2">
+            <img
+              src={`${apiBaseUrl}${proofUrl}`}
+              alt="Bukti misi"
+              className="w-full h-40 object-cover border-2 border-ink"
+            />
+            <div className="flex items-center gap-2 text-ink text-xs font-extrabold">
+              <span className="bg-ink text-lime px-1.5 py-0.5">✓ SELESAI</span>
+              <span>+{userMission.pointsEarned} poin earned</span>
+            </div>
+          </div>
+        )}
+
+        {isCompleted && !isVerified && (
+          <div className="border-2 border-ink px-3 py-2 bg-cream-2">
+            <p className="text-xs font-extrabold uppercase tracking-widest text-muted">
+              Menunggu verifikasi
+            </p>
+          </div>
+        )}
+
+        {!isCompleted && (
+          <button
+            onClick={() => onComplete(userMission.id)}
+            className="w-full py-2.5 text-sm font-extrabold border-2 border-ink bg-ink text-cream shadow-hard-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[2px] active:translate-y-[2px] transition-all duration-100"
+          >
+            Selesaikan →
+          </button>
+        )}
+      </div>
     </div>
   );
 }

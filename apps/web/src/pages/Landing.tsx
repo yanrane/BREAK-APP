@@ -1,180 +1,156 @@
 import { Link } from 'react-router-dom';
 
-const missions = [
-  { emoji: '🏃', label: 'Jogging 15 menit', pts: 20, cat: 'Fisik' },
-  { emoji: '📖', label: 'Baca buku 20 halaman', pts: 15, cat: 'Mental' },
-  { emoji: '📞', label: 'Telepon keluarga', pts: 10, cat: 'Sosial' },
-  { emoji: '🌿', label: 'Foto alam luar rumah', pts: 10, cat: 'Fisik' },
-  { emoji: '✍️', label: 'Jurnal tangan 1 halaman', pts: 15, cat: 'Kreatif' },
-  { emoji: '🧘', label: 'Meditasi 10 menit', pts: 15, cat: 'Mental' },
+const STATS = [
+  { value: '30+', label: 'menit terbuang scrolling per hari' },
+  { value: '60%', label: 'pengguna merasa waktunya hilang' },
+  { value: '2×', label: 'penurunan fokus setelah doomscrolling' },
 ];
 
-const stats = [
-  { value: '30+', label: 'Menit rata-rata scrolling per hari' },
-  { value: '60%', label: 'Pengguna merasa waktu terbuang' },
-  { value: '2×', label: 'Penurunan fokus setelah doomscrolling' },
+const HOW = [
+  { n: '01', title: 'Dapat 3 misi hari ini', body: 'Setiap pagi kamu dapat 3 misi nyata — fisik, mental, sosial.' },
+  { n: '02', title: 'Kerjakan & foto buktinya', body: 'Lakukan di dunia nyata, upload foto, poin langsung masuk.' },
+  { n: '03', title: 'Naik di leaderboard', body: 'Kompetisi mingguan dengan teman. Streak 7 hari = +50 bonus.' },
+  { n: '04', title: 'Latih otak dengan mini games', body: 'Reaction time & fast click melatih fokus — dapat poin juga.' },
+];
+
+const MISSIONS = [
+  { e: '🏃', t: 'Jogging 15 menit', p: 20, c: 'Fisik' },
+  { e: '📖', t: 'Baca buku 20 halaman', p: 15, c: 'Mental' },
+  { e: '📞', t: 'Telepon keluarga', p: 10, c: 'Sosial' },
+  { e: '🌿', t: 'Foto alam luar rumah', p: 10, c: 'Fisik' },
+  { e: '✍️', t: 'Jurnal tangan 1 hal.', p: 15, c: 'Kreatif' },
+  { e: '🧘', t: 'Meditasi 10 menit', p: 15, c: 'Mental' },
+];
+
+const EFFECTS = [
+  { icon: '⚡', title: 'Dopamin berlebih', body: 'Konten pendek = dopamin hit yang cepat dan sering. Lama-lama motivasi untuk aktivitas dunia nyata turun drastis.' },
+  { icon: '🎯', title: 'Fokus menyusut', body: 'Scrolling terus-menerus melatih otak untuk tidak bisa fokus lebih dari 8 detik.' },
+  { icon: '😴', title: 'Tidur rusak', body: 'Stimulasi layar sebelum tidur mengganggu fase REM — kamu capek tapi tidak benar-benar istirahat.' },
+  { icon: '😰', title: 'FOMO tanpa henti', body: 'Algoritma dirancang memaksimalkan engagement. Efek sampingnya: kecemasan sosial yang terus diperbarui.' },
 ];
 
 export default function Landing() {
   return (
-    <div className="space-y-20 py-8">
-      {/* Hero */}
-      <section className="text-center space-y-6 max-w-2xl mx-auto">
-        <div className="inline-flex items-center gap-2 bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 text-xs font-medium px-3 py-1 rounded-full border border-brand-200 dark:border-brand-800">
-          🧠 Brain Rot Elimination Awareness Kit
+    <div className="space-y-0">
+
+      {/* ── HERO ── */}
+      <section className="py-16 md:py-24 max-w-3xl">
+        <div className="inline-flex items-center gap-2 border-2 border-ink px-3 py-1 text-xs font-bold uppercase tracking-widest mb-8">
+          Brain Rot Elimination Awareness Kit
         </div>
-        <h1 className="text-5xl font-extrabold tracking-tight leading-tight">
-          Putuskan loop{' '}
-          <span className="text-brand-600 dark:text-brand-500">doomscrolling</span>.<br />
-          Bangun kebiasaan nyata.
+        <h1 className="text-6xl md:text-8xl font-extrabold leading-[0.9] tracking-tight mb-6">
+          Berhenti<br />
+          <span className="bg-lime px-2">scrolling.</span>
         </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400">
+        <p className="text-lg text-muted max-w-xl mb-10 font-medium leading-relaxed">
           BREAK membantu kamu menyadari waktu yang hilang di media sosial dan
           menggantinya dengan misi harian di dunia nyata.
         </p>
-        <div className="flex gap-3 justify-center">
+        <div className="flex gap-3 flex-wrap">
           <Link
             to="/register"
-            className="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold transition-colors"
+            className="px-8 py-3 text-base font-extrabold border-2 border-ink bg-ink text-cream shadow-hard hover:shadow-hard-sm hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all duration-100"
           >
-            Mulai Gratis
+            Mulai Gratis →
           </Link>
           <Link
             to="/login"
-            className="px-6 py-3 rounded-xl border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors"
+            className="px-8 py-3 text-base font-bold border-2 border-ink text-ink shadow-hard hover:shadow-hard-sm hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all duration-100"
           >
             Masuk
           </Link>
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="grid grid-cols-3 gap-6 max-w-3xl mx-auto">
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            className="text-center rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-6"
-          >
-            <p className="text-4xl font-extrabold text-brand-600 dark:text-brand-500">{s.value}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{s.label}</p>
-          </div>
-        ))}
-      </section>
-
-      {/* What is brain rot */}
-      <section className="max-w-3xl mx-auto space-y-6">
-        <h2 className="text-3xl font-bold text-center">Apa itu <em>brain rot</em>?</h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          {[
-            {
-              icon: '⚡',
-              title: 'Dopamin berlebih',
-              desc: 'Konten pendek memicu dopamin hit yang sering — menurunkan motivasi untuk aktivitas low-stimulation seperti baca buku atau olahraga.',
-            },
-            {
-              icon: '🎯',
-              title: 'Rentang fokus menyusut',
-              desc: 'Heavy scrolling secara konsisten dikaitkan dengan penurunan kemampuan fokus bertahan dalam jangka panjang.',
-            },
-            {
-              icon: '😴',
-              title: 'Tidur terganggu',
-              desc: 'Blue light + stimulasi emosional sebelum tidur mengganggu fase REM — kamu lelah tapi tak benar-benar istirahat.',
-            },
-            {
-              icon: '😰',
-              title: 'Loop kecemasan FOMO',
-              desc: 'Algoritma dirancang untuk memaksimalkan engagement — efek sampingnya adalah kecemasan sosial yang terus diperbarui.',
-            },
-          ].map((item) => (
-            <div
-              key={item.title}
-              className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 space-y-2"
-            >
-              <p className="text-2xl">{item.icon}</p>
-              <p className="font-semibold">{item.title}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{item.desc}</p>
+      {/* ── STATS BAND ── */}
+      <section className="border-y-2 border-ink bg-lime -mx-5 px-5 py-10">
+        <div className="max-w-3xl grid grid-cols-3 gap-6">
+          {STATS.map((s) => (
+            <div key={s.value}>
+              <p className="text-5xl md:text-6xl font-extrabold text-ink leading-none">{s.value}</p>
+              <p className="text-sm font-semibold text-ink/70 mt-2 leading-snug">{s.label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="max-w-3xl mx-auto space-y-6">
-        <h2 className="text-3xl font-bold text-center">Cara kerja BREAK</h2>
-        <div className="space-y-4">
-          {[
-            {
-              step: '01',
-              title: 'Dapatkan 3 misi hari ini',
-              desc: 'Setiap pagi BREAK memberikan 3 misi personal — aktivitas fisik, mental, dan sosial.',
-            },
-            {
-              step: '02',
-              title: 'Kerjakan & upload bukti',
-              desc: 'Selesaikan misi di dunia nyata, foto buktinya, upload. Poin langsung masuk.',
-            },
-            {
-              step: '03',
-              title: 'Kumpulkan poin & naik ranking',
-              desc: 'Kompetisi di leaderboard mingguan dengan teman. Streak 7 hari? Bonus +50 poin.',
-            },
-            {
-              step: '04',
-              title: 'Latih fokus dengan mini games',
-              desc: 'Reaksi time, fast clicking — mini games untuk melatih kemampuan fokus yang menghasilkan poin.',
-            },
-          ].map((item) => (
-            <div
-              key={item.step}
-              className="flex gap-5 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5"
-            >
-              <span className="text-3xl font-extrabold text-brand-200 dark:text-brand-900 leading-none pt-1 select-none">
-                {item.step}
+      {/* ── BRAIN ROT ── */}
+      <section className="py-16 max-w-3xl">
+        <p className="text-label mb-3">Masalah</p>
+        <h2 className="text-4xl md:text-5xl font-extrabold mb-10 leading-tight">
+          Apa itu <em className="not-italic underline decoration-lime decoration-4">brain rot</em>?
+        </h2>
+        <div className="grid md:grid-cols-2 gap-4">
+          {EFFECTS.map((e) => (
+            <div key={e.title} className="border-2 border-ink p-5 bg-cream-2 shadow-hard">
+              <p className="text-2xl mb-3">{e.icon}</p>
+              <p className="font-extrabold text-base mb-1">{e.title}</p>
+              <p className="text-sm text-muted leading-relaxed font-medium">{e.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ── */}
+      <section className="py-16 border-t-2 border-ink max-w-3xl">
+        <p className="text-label mb-3">Cara Kerja</p>
+        <h2 className="text-4xl md:text-5xl font-extrabold mb-10 leading-tight">
+          4 langkah memulai.
+        </h2>
+        <div className="space-y-3">
+          {HOW.map((item) => (
+            <div key={item.n} className="flex gap-6 border-2 border-ink p-5 bg-cream shadow-hard group hover:bg-lime transition-colors duration-150">
+              <span className="text-4xl font-extrabold text-ink/20 group-hover:text-ink/40 transition-colors leading-none pt-0.5 shrink-0 select-none">
+                {item.n}
               </span>
               <div>
-                <p className="font-semibold">{item.title}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{item.desc}</p>
+                <p className="font-extrabold text-base">{item.title}</p>
+                <p className="text-sm text-muted font-medium mt-1 leading-relaxed">{item.body}</p>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Mission pool preview */}
-      <section className="max-w-3xl mx-auto space-y-6">
-        <h2 className="text-3xl font-bold text-center">Contoh misi</h2>
+      {/* ── MISSION PREVIEW ── */}
+      <section className="py-16 border-t-2 border-ink max-w-3xl">
+        <p className="text-label mb-3">Contoh Misi</p>
+        <h2 className="text-4xl md:text-5xl font-extrabold mb-10 leading-tight">
+          Aktivitas dunia nyata.
+        </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {missions.map((m) => (
-            <div
-              key={m.label}
-              className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-2"
-            >
-              <p className="text-2xl">{m.emoji}</p>
-              <p className="font-medium text-sm leading-tight">{m.label}</p>
-              <div className="flex items-center gap-2">
-                <span className="text-xs bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 px-2 py-0.5 rounded-full">
-                  +{m.pts} pts
+          {MISSIONS.map((m) => (
+            <div key={m.t} className="border-2 border-ink p-4 bg-cream shadow-hard hover:bg-lime transition-colors duration-150 group">
+              <p className="text-3xl mb-3">{m.e}</p>
+              <p className="font-bold text-sm leading-tight mb-3">{m.t}</p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold bg-ink text-cream px-2 py-0.5">
+                  +{m.p} pts
                 </span>
-                <span className="text-xs text-gray-400">{m.cat}</span>
+                <span className="text-xs font-semibold text-muted">{m.c}</span>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="text-center space-y-4 py-8 max-w-xl mx-auto">
-        <h2 className="text-3xl font-bold">Siap memulai?</h2>
-        <p className="text-gray-500 dark:text-gray-400">
-          Gratis. Tanpa langganan. Mulai hari ini.
-        </p>
-        <Link
-          to="/register"
-          className="inline-block px-8 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold transition-colors"
-        >
-          Buat Akun Sekarang
-        </Link>
+      {/* ── CTA ── */}
+      <section className="py-16 border-t-2 border-ink max-w-3xl">
+        <div className="border-2 border-ink p-10 bg-ink text-cream shadow-hard-lime">
+          <p className="text-label mb-4" style={{ color: '#857F6F' }}>Mulai Sekarang</p>
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-3 leading-tight">
+            Gratis. Selamanya.
+          </h2>
+          <p className="text-cream/60 font-medium mb-8 text-lg">
+            Tanpa langganan. Tanpa iklan. Cuma kamu vs kebiasaanmu.
+          </p>
+          <Link
+            to="/register"
+            className="inline-block px-8 py-3 text-base font-extrabold border-2 border-lime bg-lime text-ink shadow-[4px_4px_0_0_#C2F13B] hover:shadow-[2px_2px_0_0_#C2F13B] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all duration-100"
+          >
+            Buat Akun Sekarang →
+          </Link>
+        </div>
       </section>
     </div>
   );

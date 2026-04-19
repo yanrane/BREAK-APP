@@ -1,3 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --cream: #F8F4EC;
+    --cream-2: #EDE8DC;
+    --ink: #13120E;
+    --lime: #C2F13B;
+    --coral: #F04D25;
+    --muted: #857F6F;
+  }
+
+  html {
+    background-color: var(--cream);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    background-color: var(--cream);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .text-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+}

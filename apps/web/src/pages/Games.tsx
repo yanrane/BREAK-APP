@@ -1,5 +1,4 @@
 import ReactionGame from '../features/games/ReactionGame';
-import { cn } from '../lib/cn';
 
 const COMING_SOON = [
   { icon: '🖱️', title: 'Fast Clicking', description: 'Klik sebanyak mungkin dalam 10 detik' },
@@ -8,37 +7,34 @@ const COMING_SOON = [
 
 export default function Games() {
   return (
-    <div className="max-w-lg mx-auto px-4 py-8 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Mini Games</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Latih fokus dan dapatkan poin. Maks 20 poin/hari dari game.
+    <div className="max-w-xl space-y-8">
+      <div className="border-b-2 border-ink pb-5">
+        <p className="text-label mb-1">Latih Otak</p>
+        <h1 className="text-4xl font-extrabold leading-none tracking-tight">Mini Games</h1>
+        <p className="text-sm text-muted font-semibold mt-2">
+          Dapatkan poin dengan latihan fokus. Maks 20 pts/hari.
         </p>
       </div>
 
       <section>
+        <p className="text-label mb-4">Tersedia Sekarang</p>
         <ReactionGame />
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-          Segera Hadir
-        </h2>
-        <div className="space-y-3">
+        <p className="text-label mb-3">Segera Hadir</p>
+        <div className="space-y-2">
           {COMING_SOON.map(({ icon, title, description }) => (
             <div
               key={title}
-              className={cn(
-                'flex items-center gap-4 rounded-xl border p-4',
-                'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 opacity-50',
-              )}
+              className="flex items-center gap-4 border-2 border-ink/30 p-4 bg-cream-2 opacity-60"
             >
               <span className="text-3xl">{icon}</span>
-              <div>
-                <p className="font-semibold text-sm">{title}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
+              <div className="flex-1">
+                <p className="font-extrabold text-sm">{title}</p>
+                <p className="text-xs text-muted font-medium mt-0.5">{description}</p>
               </div>
-              <span className="ml-auto text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 shrink-0">
+              <span className="text-xs font-extrabold border-2 border-ink/30 px-2 py-0.5 shrink-0">
                 Phase 2
               </span>
             </div>

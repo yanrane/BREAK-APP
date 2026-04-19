@@ -26,9 +26,7 @@ export default function ProofUploadModal({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setFileError(null);
-
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       setFileError('Hanya JPG, PNG, dan WEBP yang diizinkan');
       return;
@@ -37,11 +35,9 @@ export default function ProofUploadModal({
       setFileError('Ukuran file maksimal 5MB');
       return;
     }
-
     setSelectedFile(file);
     if (preview) URL.revokeObjectURL(preview);
-    const url = URL.createObjectURL(file);
-    setPreview(url);
+    setPreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = () => {
@@ -58,35 +54,42 @@ export default function ProofUploadModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-ink/60"
         onClick={handleClose}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 space-y-4">
-        <h2 className="font-bold text-lg">Upload Bukti</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400">{missionTitle}</p>
+      <div className="relative w-full max-w-sm bg-cream border-2 border-ink shadow-hard-lg p-6 space-y-4 animate-fade-up">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="text-label mb-0.5">Upload Bukti</p>
+            <h2 className="font-extrabold text-base leading-tight">{missionTitle}</h2>
+          </div>
+          <button
+            onClick={handleClose}
+            className="text-muted hover:text-ink font-bold text-lg leading-none shrink-0 transition-colors"
+            aria-label="Tutup"
+          >
+            ×
+          </button>
+        </div>
 
         <div
           className={cn(
-            'border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors',
-            'border-gray-300 dark:border-gray-600 hover:border-brand-500',
-            preview && 'p-0 border-solid',
+            'border-2 border-dashed border-ink cursor-pointer transition-colors',
+            'hover:bg-lime-100',
+            preview ? 'p-0 border-solid' : 'p-6 text-center',
           )}
           onClick={() => fileInputRef.current?.click()}
         >
           {preview ? (
-            <img
-              src={preview}
-              alt="Preview"
-              className="w-full h-48 object-cover rounded-xl"
-            />
+            <img src={preview} alt="Preview" className="w-full h-48 object-cover" />
           ) : (
-            <div className="py-6 space-y-2">
-              <p className="text-3xl">📷</p>
-              <p className="text-sm text-gray-500">Klik untuk pilih foto</p>
-              <p className="text-xs text-gray-400">JPG, PNG, WEBP · Maks 5MB</p>
+            <div className="space-y-2">
+              <p className="text-4xl">📷</p>
+              <p className="text-sm font-bold">Klik untuk pilih foto</p>
+              <p className="text-xs text-muted font-semibold">JPG, PNG, WEBP · Maks 5MB</p>
             </div>
           )}
         </div>
@@ -100,27 +103,25 @@ export default function ProofUploadModal({
         />
 
         {fileError && (
-          <p className="text-red-500 text-xs">{fileError}</p>
+          <div className="border-2 border-coral px-3 py-1.5">
+            <p className="text-coral text-xs font-extrabold">{fileError}</p>
+          </div>
         )}
 
         <div className="flex gap-3">
           <button
             onClick={handleClose}
             disabled={isSubmitting}
-            className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium disabled:opacity-50"
+            className="flex-1 py-2.5 text-sm font-extrabold border-2 border-ink text-ink shadow-hard-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100 disabled:opacity-50"
           >
             Batal
           </button>
           <button
             onClick={handleSubmit}
             disabled={!selectedFile || isSubmitting}
-            className={cn(
-              'flex-1 py-2 rounded-lg text-sm font-medium text-white transition-colors',
-              'bg-brand-600 hover:bg-brand-700',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-            )}
+            className="flex-1 py-2.5 text-sm font-extrabold border-2 border-ink bg-ink text-cream shadow-hard-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-hard-sm"
           >
-            {isSubmitting ? 'Mengunggah...' : 'Kirim Bukti'}
+            {isSubmitting ? 'Mengunggah...' : 'Kirim Bukti →'}
           </button>
         </div>
       </div>

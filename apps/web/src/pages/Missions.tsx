@@ -38,44 +38,48 @@ export default function Missions() {
     }
   };
 
+  const completed = missions.filter((m) => m.status === 'VERIFIED' || m.status === 'COMPLETED').length;
+
   return (
-    <div className="max-w-lg mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Misi Hari Ini</h1>
-        <Link
-          to="/missions/history"
-          className="text-sm text-brand-600 hover:underline"
-        >
-          Riwayat
-        </Link>
+    <div className="max-w-xl">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6 border-b-2 border-ink pb-5">
+        <div>
+          <p className="text-label mb-1">Hari ini</p>
+          <h1 className="text-4xl font-extrabold leading-none tracking-tight">
+            Misi Harian
+          </h1>
+        </div>
+        <div className="text-right">
+          <p className="text-label mb-1">Progress</p>
+          <p className="text-3xl font-extrabold leading-none">
+            {completed}<span className="text-lg text-muted">/{missions.length}</span>
+          </p>
+        </div>
       </div>
 
       {loading && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-40 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />
+            <div key={i} className="h-40 border-2 border-ink/20 bg-cream-2 animate-pulse" />
           ))}
         </div>
       )}
 
       {error && (
-        <div className="text-center py-8 space-y-3">
-          <p className="text-gray-500">{error}</p>
-          <button
-            onClick={refetch}
-            className="text-sm text-brand-600 hover:underline"
-          >
+        <div className="border-2 border-coral p-6 shadow-hard-coral text-center">
+          <p className="text-muted font-semibold mb-3">{error}</p>
+          <button onClick={refetch} className="text-sm font-extrabold underline decoration-lime decoration-2">
             Coba lagi
           </button>
         </div>
       )}
 
       {!loading && !error && missions.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-3xl mb-3">📋</p>
-          <p className="text-gray-500 text-sm">
-            Misi hari ini belum tersedia. Cek lagi besok pagi!
-          </p>
+        <div className="border-2 border-ink p-10 shadow-hard text-center">
+          <p className="text-4xl mb-4">📋</p>
+          <p className="font-extrabold text-lg mb-1">Belum ada misi</p>
+          <p className="text-sm text-muted font-medium">Misi dikirim setiap pukul 00:00 WIB.</p>
         </div>
       )}
 
@@ -89,14 +93,19 @@ export default function Missions() {
               onComplete={handleComplete}
             />
           ))}
-          <p className="text-center text-xs text-gray-400 mt-6">
-            Misi direset setiap pukul 00:00 WIB
-          </p>
+          <div className="flex items-center justify-between pt-2">
+            <p className="text-xs text-muted font-semibold">Reset setiap 00:00 WIB</p>
+            <Link to="/missions/history" className="text-xs font-extrabold underline decoration-lime decoration-2">
+              Riwayat →
+            </Link>
+          </div>
         </div>
       )}
 
       {submitError && (
-        <p className="text-red-500 text-sm text-center mt-4">{submitError}</p>
+        <div className="border-2 border-coral px-4 py-2 mt-4">
+          <p className="text-coral text-sm font-semibold">{submitError}</p>
+        </div>
       )}
 
       <ProofUploadModal

@@ -9,10 +9,10 @@ const PERIODS: { value: LeaderboardPeriod; label: string }[] = [
   { value: 'alltime', label: 'Semua Waktu' },
 ];
 
-const RANK_BADGE: Record<number, string> = {
-  1: 'bg-yellow-400 text-yellow-900',
-  2: 'bg-gray-300 text-gray-700',
-  3: 'bg-orange-400 text-orange-900',
+const RANK_STYLE: Record<number, { bg: string; text: string; label: string }> = {
+  1: { bg: 'bg-[#FFD700]', text: 'text-ink', label: '🥇' },
+  2: { bg: 'bg-[#C0C0C0]', text: 'text-ink', label: '🥈' },
+  3: { bg: 'bg-[#CD7F32]', text: 'text-ink', label: '🥉' },
 };
 
 export default function Leaderboard() {
@@ -21,19 +21,24 @@ export default function Leaderboard() {
   const currentUserId = useAuthStore((s) => s.user?.id);
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Leaderboard</h1>
+    <div className="max-w-xl">
+      {/* Header */}
+      <div className="border-b-2 border-ink pb-5 mb-6">
+        <p className="text-label mb-1">Kompetisi</p>
+        <h1 className="text-4xl font-extrabold leading-none tracking-tight">Leaderboard</h1>
+      </div>
 
-      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl mb-6">
+      {/* Period tabs */}
+      <div className="flex border-2 border-ink mb-6 shadow-hard">
         {PERIODS.map(({ value, label }) => (
           <button
             key={value}
             onClick={() => setPeriod(value)}
             className={cn(
-              'flex-1 py-2 rounded-lg text-sm font-medium transition-colors',
+              'flex-1 py-2.5 text-sm font-extrabold transition-colors border-r-2 border-ink last:border-r-0',
               period === value
-                ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-white'
-                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300',
+                ? 'bg-ink text-cream'
+                : 'bg-cream text-ink hover:bg-cream-2',
             )}
           >
             {label}
@@ -42,66 +47,73 @@ export default function Leaderboard() {
       </div>
 
       {loading && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-16 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />
+            <div key={i} className="h-16 border-2 border-ink/20 bg-cream-2 animate-pulse" />
           ))}
         </div>
       )}
 
       {error && (
-        <p className="text-center text-gray-500 py-8">{error}</p>
+        <div className="border-2 border-ink p-8 shadow-hard text-center">
+          <p className="text-muted font-semibold">{error}</p>
+        </div>
       )}
 
       {!loading && !error && entries.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-3xl mb-3">🏆</p>
-          <p className="text-sm text-gray-500">Belum ada data untuk periode ini.</p>
+        <div className="border-2 border-ink p-10 shadow-hard text-center">
+          <p className="text-4xl mb-4">🏆</p>
+          <p className="font-extrabold text-lg mb-1">Belum ada data</p>
+          <p className="text-sm text-muted font-medium">Selesaikan misi untuk masuk ranking!</p>
         </div>
       )}
 
       {!loading && !error && entries.length > 0 && (
-        <div className="space-y-2">
-          {entries.map((entry) => (
-            <div
-              key={entry.userId}
-              className={cn(
-                'flex items-center gap-3 rounded-xl border p-3 transition-colors',
-                'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700',
-                entry.userId === currentUserId && 'border-brand-400 dark:border-brand-500 bg-brand-50 dark:bg-brand-950',
-              )}
-            >
+        <div className="border-2 border-ink shadow-hard divide-y-2 divide-ink">
+          {entries.map((entry) => {
+            const rankStyle = RANK_STYLE[entry.rank];
+            const isMe = entry.userId === currentUserId;
+            return (
               <div
+                key={entry.userId}
                 className={cn(
-                  'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
-                  RANK_BADGE[entry.rank] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+                  'flex items-center gap-4 px-4 py-3 transition-colors',
+                  isMe ? 'bg-lime' : 'bg-cream hover:bg-cream-2',
                 )}
               >
-                {entry.rank}
+                {/* Rank */}
+                <div
+                  className={cn(
+                    'w-10 h-10 border-2 border-ink flex items-center justify-center shrink-0 text-sm font-extrabold',
+                    rankStyle ? rankStyle.bg : 'bg-cream-2',
+                  )}
+                >
+                  {rankStyle ? rankStyle.label : entry.rank}
+                </div>
+
+                {/* Avatar */}
+                <div className="w-9 h-9 border-2 border-ink bg-cream-2 flex items-center justify-center shrink-0 overflow-hidden">
+                  {entry.avatarUrl ? (
+                    <img src={entry.avatarUrl} alt={entry.username} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xs font-extrabold">
+                      {entry.username.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+
+                <span className="flex-1 font-bold text-sm truncate">
+                  {entry.username}
+                  {isMe && <span className="ml-2 text-xs font-extrabold text-ink/50">(kamu)</span>}
+                </span>
+
+                <span className="text-sm font-extrabold shrink-0">
+                  {entry.points.toLocaleString('id-ID')}
+                  <span className="text-xs font-bold text-muted ml-1">pts</span>
+                </span>
               </div>
-
-              <div className="w-9 h-9 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center shrink-0 overflow-hidden">
-                {entry.avatarUrl ? (
-                  <img src={entry.avatarUrl} alt={entry.username} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-sm font-bold text-brand-600 dark:text-brand-400">
-                    {entry.username.charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-
-              <span className="flex-1 text-sm font-medium truncate">
-                {entry.username}
-                {entry.userId === currentUserId && (
-                  <span className="ml-1 text-xs text-brand-500">(kamu)</span>
-                )}
-              </span>
-
-              <span className="text-sm font-bold text-brand-600">
-                {entry.points.toLocaleString('id-ID')} pts
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
