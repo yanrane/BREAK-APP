@@ -33,7 +33,7 @@ export function useDashboard() {
       const [meRes, missionsRes, leaderboardRes] = await Promise.all([
         api.get<{ success: true; data: { user: DashboardUser } }>('/me'),
         api.get<{ success: true; data: TodayMission[] }>('/missions/today'),
-        api.get<{ success: true; data: LeaderboardEntry[] }>('/leaderboard?period=weekly&limit=5'),
+        api.get<{ success: true; data: LeaderboardEntry[] }>('/leaderboard?period=weekly&limit=50'),
       ]);
 
       const user = meRes.data.data.user;
@@ -50,7 +50,7 @@ export function useDashboard() {
         user,
         todayMissions: { total: missions.length, completed },
         weeklyRank: userEntry?.rank ?? null,
-        topLeaderboard: leaderboard,
+        topLeaderboard: leaderboard.slice(0, 5),
       });
       setError(null);
     } catch {

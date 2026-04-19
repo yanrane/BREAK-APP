@@ -74,12 +74,12 @@ export default function ReactionGame() {
     }
   };
 
-  const handleNextRound = (currentRounds: RoundResult[]) => {
+  const handleNextRound = () => {
     if (tooEarly) {
       startRound();
       return;
     }
-    if (currentRounds.length >= TOTAL_ROUNDS) {
+    if (rounds.length >= TOTAL_ROUNDS) {
       setPhase('sessionResult');
     } else {
       startRound();
@@ -193,7 +193,7 @@ export default function ReactionGame() {
             </>
           )}
           <button
-            onClick={() => handleNextRound(rounds)}
+            onClick={handleNextRound}
             className="mt-2 px-6 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium transition-colors"
           >
             {tooEarly
