@@ -93,11 +93,9 @@ describe('GET /api/v1/leaderboard', () => {
     expect(res.body.data[1].rank).toBe(2);
   });
 
-  it('alltime — uses User.totalPoints, includes all non-zero users', async () => {
-    await request(app)
-      .post('/api/v1/games/submit')
-      .set('Authorization', `Bearer ${tokenA}`)
-      .send({ gameType: 'REACTION', score: 1000 });
+  it('alltime — reads User.totalPoints directly, no game/mission rows needed', async () => {
+    // Seed totalPoints directly — no GameScore or UserMission rows
+    await prisma.user.update({ where: { id: userAId }, data: { totalPoints: 100 } });
 
     const res = await request(app)
       .get('/api/v1/leaderboard?period=alltime')
@@ -105,7 +103,7 @@ describe('GET /api/v1/leaderboard', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.length).toBeGreaterThan(0);
-    expect(res.body.data[0]).toHaveProperty('points');
+    expect(res.body.data[0]).toMatchObject({ userId: userAId, points: 100, rank: 1 });
   });
 
   it('respects limit query param', async () => {
