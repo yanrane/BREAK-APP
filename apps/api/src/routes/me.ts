@@ -1,14 +1,14 @@
 import { Router } from 'express';
+import { requireAuth } from '../middleware/requireAuth';
 
 const router: Router = Router();
 
-// GET /api/v1/me
-router.get('/', (_req, res) => {
-  res.status(501).json({ success: false, error: { code: 'NOT_IMPLEMENTED', message: 'Not implemented' } });
+router.get('/', requireAuth, (req, res) => {
+  res.json({ success: true, data: { user: req.user } });
 });
 
-// PATCH /api/v1/me/settings
-router.patch('/settings', (_req, res) => {
+// PATCH /me/settings — stub until Prompt 3
+router.patch('/settings', requireAuth, (_req, res) => {
   res.status(501).json({ success: false, error: { code: 'NOT_IMPLEMENTED', message: 'Not implemented' } });
 });
 
