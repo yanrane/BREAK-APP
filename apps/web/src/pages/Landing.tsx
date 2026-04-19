@@ -38,7 +38,7 @@ export default function Landing() {
         <div className="inline-flex items-center gap-2 border-2 border-ink px-3 py-1 text-xs font-bold uppercase tracking-widest mb-8">
           Brain Rot Elimination Awareness Kit
         </div>
-        <h1 className="text-6xl md:text-8xl font-extrabold leading-[0.9] tracking-tight mb-6">
+        <h1 className="text-5xl sm:text-6xl md:text-8xl font-extrabold leading-[0.9] tracking-tight mb-6">
           Berhenti<br />
           <span className="bg-lime px-2">scrolling.</span>
         </h1>
@@ -64,7 +64,7 @@ export default function Landing() {
 
       {/* ── STATS BAND ── */}
       <section className="border-y-2 border-ink bg-lime py-10 max-w-3xl">
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-3 gap-4">
           {STATS.map((s) => (
             <div key={s.value}>
               <p className="text-5xl md:text-6xl font-extrabold text-ink leading-none">{s.value}</p>
