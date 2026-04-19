@@ -89,13 +89,14 @@ model UsageLog {
 }
 
 model GameScore {
-  id       String   @id @default(cuid())
-  userId   String
-  gameType GameType
-  score    Int
-  playedAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  gameType     GameType
+  score        Int
+  pointsEarned Int      @default(0)
+  playedAt     DateTime @default(now())
 
-  user     User     @relation(fields: [userId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
 }
 
 enum MissionCategory {
