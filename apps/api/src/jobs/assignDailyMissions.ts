@@ -23,7 +23,7 @@ export async function assignMissionsForUser(userId: string): Promise<void> {
   const recentCompletions = await prisma.userMission.findMany({
     where: {
       userId,
-      status: { in: ['COMPLETED', 'VERIFIED'] },
+      status: { in: ['COMPLETED', 'VERIFIED'] }, // COMPLETED included for Phase 2 moderation flow
       completedAt: { gte: new Date(Date.now() - 48 * 60 * 60 * 1000) },
     },
     include: { mission: { select: { id: true, cooldownHours: true } } },
@@ -58,7 +58,10 @@ export async function assignMissionsForUser(userId: string): Promise<void> {
   });
 }
 
-/** Starts the cron job that assigns daily missions to all users at 00:00 WIB. */
+/**
+ * Starts the cron scheduler that assigns daily missions to all users at 00:00 WIB.
+ * Call once during application initialization.
+ */
 export function startDailyMissionsCron(): void {
   // Runs at 00:00 every day in WIB (Asia/Jakarta = UTC+7)
   cron.schedule(
@@ -67,7 +70,15 @@ export function startDailyMissionsCron(): void {
       console.log('[cron] Assigning daily missions...');
       try {
         const users = await prisma.user.findMany({ select: { id: true } });
-        await Promise.all(users.map((u) => assignMissionsForUser(u.id)));
+        await Promise.all(
+          users.map(async (u) => {
+            try {
+              await assignMissionsForUser(u.id);
+            } catch (err) {
+              console.error(`[cron] Failed to assign missions for user ${u.id}:`, err);
+            }
+          }),
+        );
         console.log(`[cron] Assigned missions for ${users.length} users`);
       } catch (err) {
         console.error('[cron] assignDailyMissions error:', err);
