@@ -1,9 +1,17 @@
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useThemeStore } from '../store/useThemeStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { cn } from '../lib/cn';
 
 export default function Layout() {
   const { isDark, toggle } = useThemeStore();
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
@@ -12,10 +20,33 @@ export default function Layout() {
           BREAK
         </Link>
         <div className="flex items-center gap-4">
-          <Link to="/dashboard" className="text-sm hover:underline">Dashboard</Link>
-          <Link to="/missions" className="text-sm hover:underline">Misi</Link>
-          <Link to="/leaderboard" className="text-sm hover:underline">Leaderboard</Link>
-          <Link to="/games" className="text-sm hover:underline">Games</Link>
+          {user ? (
+            <>
+              <Link to="/dashboard" className="text-sm hover:underline">Dashboard</Link>
+              <Link to="/missions" className="text-sm hover:underline">Misi</Link>
+              <Link to="/leaderboard" className="text-sm hover:underline">Leaderboard</Link>
+              <Link to="/games" className="text-sm hover:underline">Games</Link>
+              <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:inline">
+                {user.username}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="text-sm text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+              >
+                Keluar
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="text-sm hover:underline">Masuk</Link>
+              <Link
+                to="/register"
+                className="text-sm px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium transition-colors"
+              >
+                Daftar
+              </Link>
+            </>
+          )}
           <button
             onClick={toggle}
             className={cn(

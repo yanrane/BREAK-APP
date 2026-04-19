@@ -11,7 +11,7 @@
     "test:unit": "vitest run --config vitest.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "ts-node prisma/seed.ts",
+    "db:seed": "ts-node-dev --transpile-only --no-notify prisma/seed.ts",
     "db:generate": "prisma generate"
   },
   "dependencies": {
