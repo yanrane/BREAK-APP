@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import app from '../index';
 import prisma from '../lib/prisma';
@@ -7,11 +7,27 @@ let accessToken: string;
 let userId: string;
 
 beforeEach(async () => {
+  const existing = await prisma.user.findMany({ where: { email: { endsWith: '@game-test.com' } } });
+  for (const u of existing) {
+    await prisma.gameScore.deleteMany({ where: { userId: u.id } });
+    await prisma.refreshToken.deleteMany({ where: { userId: u.id } });
+  }
+  await prisma.user.deleteMany({ where: { email: { endsWith: '@game-test.com' } } });
+
   const res = await request(app)
     .post('/api/v1/auth/register')
-    .send({ email: 'game@test.com', username: 'gametest', password: 'password123' });
+    .send({ email: 'game@game-test.com', username: 'gametest', password: 'password123' });
+
+  if (res.status !== 201) {
+    throw new Error(`Test setup failed — registration returned ${res.status}: ${JSON.stringify(res.body)}`);
+  }
+
   accessToken = res.body.data.accessToken;
   userId = res.body.data.user.id;
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
 });
 
 describe('POST /api/v1/games/submit', () => {
