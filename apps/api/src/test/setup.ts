@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
-import { afterEach } from 'vitest';
+import { beforeAll, beforeEach } from 'vitest';
+import prisma from '../lib/prisma';
 
 beforeAll(() => {
   execSync('npx prisma migrate deploy', {
@@ -8,8 +9,8 @@ beforeAll(() => {
   });
 });
 
-afterEach(async () => {
-  const { default: prisma } = await import('../lib/prisma');
+beforeEach(async () => {
+  // Clean state before each test — handles cleanup even if previous test failed
   await prisma.refreshToken.deleteMany();
   await prisma.userMission.deleteMany();
   await prisma.usageLog.deleteMany();
