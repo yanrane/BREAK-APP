@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
+import { rm } from 'fs/promises';
 import app from '../index';
 import prisma from '../lib/prisma';
 import { assignMissionsForUser } from '../jobs/assignDailyMissions';
@@ -51,11 +52,22 @@ beforeEach(async () => {
     .post('/api/v1/auth/register')
     .send({ email: 'user@missions-test.com', username: 'missionstest1', password: 'password123' });
 
+  if (res.status !== 201 && res.status !== 200) {
+    throw new Error(`Test setup failed — registration returned ${res.status}: ${JSON.stringify(res.body)}`);
+  }
+
   accessToken = res.body.data.accessToken;
   userId = res.body.data.user.id;
 });
 
 afterAll(async () => {
+  // Clean up test-uploaded files
+  const uploadDir = process.env.UPLOAD_DIR ?? './uploads';
+  try {
+    await rm(uploadDir, { recursive: true, force: true });
+  } catch {
+    // Ignore cleanup errors in test environment
+  }
   await prisma.$disconnect();
 });
 
@@ -181,11 +193,12 @@ describe('GET /api/v1/missions/history', () => {
       .set('Authorization', `Bearer ${accessToken}`);
 
     expect(res.status).toBe(200);
-    expect(res.body.data).toHaveProperty('items');
-    expect(res.body.data).toHaveProperty('total');
-    expect(res.body.data.page).toBe(1);
-    expect(res.body.data.limit).toBe(10);
-    expect(Array.isArray(res.body.data.items)).toBe(true);
+    expect(res.body.data).toMatchObject({
+      items: expect.any(Array),
+      total: expect.any(Number),
+      page: 1,
+      limit: 10,
+    });
   });
 
   it('returns 401 without auth', async () => {
