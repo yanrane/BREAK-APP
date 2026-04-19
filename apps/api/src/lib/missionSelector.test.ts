@@ -86,6 +86,17 @@ describe('selectDailyMissions', () => {
     expect(result).toHaveLength(2);
   });
 
+  it('fills 3rd slot from any category when SOCIAL and CREATIVE are both empty', () => {
+    const pool = [
+      mission('p1', 'PHYSICAL'),
+      mission('m1', 'MENTAL'),
+      mission('m2', 'MENTAL'),
+    ];
+    const result = selectDailyMissions(pool);
+    expect(result).toHaveLength(3);
+    expect(new Set(result.map((m) => m.id)).size).toBe(3);
+  });
+
   it('returns empty array for empty pool', () => {
     expect(selectDailyMissions([])).toHaveLength(0);
   });

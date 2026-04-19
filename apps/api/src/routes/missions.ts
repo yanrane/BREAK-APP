@@ -1,4 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import path from 'path';
+import { promises as fsp } from 'fs';
 import { requireAuth } from '../middleware/requireAuth';
 import { uploadProofMiddleware } from '../middleware/uploadProof';
 import {
@@ -45,6 +47,11 @@ router.post(
       );
       res.json({ success: true, data: updated });
     } catch (err) {
+      // Clean up the uploaded file if the DB transaction failed
+      if (req.proofPath) {
+        const uploadDir = process.env.UPLOAD_DIR ?? './uploads';
+        fsp.unlink(path.join(uploadDir, path.basename(req.proofPath))).catch(() => {});
+      }
       next(err);
     }
   },

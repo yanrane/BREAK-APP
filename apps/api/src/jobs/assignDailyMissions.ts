@@ -19,12 +19,13 @@ export async function assignMissionsForUser(userId: string): Promise<void> {
   });
   if (existingCount > 0) return;
 
-  // Find missions completed recently (within max cooldown of 48h)
+  // Use 7 days as the lookback window — generous enough to cover any future mission
+  // with a long cooldown even if the pool is later updated beyond the current 48h max.
   const recentCompletions = await prisma.userMission.findMany({
     where: {
       userId,
       status: { in: ['COMPLETED', 'VERIFIED'] }, // COMPLETED included for Phase 2 moderation flow
-      completedAt: { gte: new Date(Date.now() - 48 * 60 * 60 * 1000) },
+      completedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
     },
     include: { mission: { select: { id: true, cooldownHours: true } } },
   });

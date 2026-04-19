@@ -39,6 +39,7 @@ export default function ProofUploadModal({
     }
 
     setSelectedFile(file);
+    if (preview) URL.revokeObjectURL(preview);
     const url = URL.createObjectURL(file);
     setPreview(url);
   };
@@ -49,6 +50,7 @@ export default function ProofUploadModal({
   };
 
   const handleClose = () => {
+    if (preview) URL.revokeObjectURL(preview);
     setPreview(null);
     setSelectedFile(null);
     setFileError(null);

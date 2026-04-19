@@ -46,7 +46,8 @@ export const uploadProofMiddleware: RequestHandler[] = [
       // Attach the saved path to req for use in the route handler
       req.proofPath = `/uploads/${filename}`;
       next();
-    } catch {
+    } catch (err) {
+      console.error('[uploadProof] Failed to write file:', err);
       next(new AppError(500, 'UPLOAD_FAILED', 'Gagal menyimpan file'));
     }
   },
