@@ -14,9 +14,6 @@ importers:
 
   apps/api:
     dependencies:
-      '@break/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
       '@prisma/client':
         specifier: ^5.14.0
         version: 5.22.0(prisma@5.22.0)
@@ -117,9 +114,6 @@ importers:
 
   apps/web:
     dependencies:
-      '@break/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
       '@hookform/resolvers':
         specifier: ^3.6.0
         version: 3.10.0(react-hook-form@7.72.1(react@18.3.1))
@@ -144,6 +138,9 @@ importers:
       tailwind-merge:
         specifier: ^2.3.0
         version: 2.6.1
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
       zustand:
         specifier: ^4.5.2
         version: 4.5.7(@types/react@18.3.28)(react@18.3.1)
