@@ -25,6 +25,7 @@ if (!process.env.VERCEL) {
   app.use('/uploads', requireAuth, express.static(uploadDir));
 }
 
+app.get('/health', (_req, res) => { res.json({ ok: true }); });
 app.use('/api/v1', router);
 app.use(errorHandler);
 
