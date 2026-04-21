@@ -1,7 +1,6 @@
 import multer from 'multer';
 import path from 'path';
 import { promises as fsp } from 'fs';
-import { v4 as uuidv4 } from 'uuid';
 import { fromBuffer as fileTypeFromBuffer } from 'file-type';
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { AppError } from '../lib/appError';
@@ -35,7 +34,7 @@ export const uploadProofMiddleware: RequestHandler[] = [
         return next(new AppError(400, 'INVALID_FILE_TYPE', 'Format file tidak valid'));
       }
 
-      const filename = `${uuidv4()}.${detected.ext}`;
+      const filename = `${crypto.randomUUID()}.${detected.ext}`;
 
       if (process.env.BLOB_READ_WRITE_TOKEN) {
         // Vercel Blob Storage (production)
