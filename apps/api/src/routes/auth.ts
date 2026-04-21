@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { registerSchema, loginSchema, refreshSchema } from '@break/shared';
+import { registerSchema, loginSchema, refreshSchema } from '../lib/schemas';
 import { register, login, refresh } from '../services/authService';
 import { AppError } from '../lib/appError';
 

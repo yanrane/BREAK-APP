@@ -16,7 +16,6 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@break/shared": "workspace:*",
     "@prisma/client": "^5.14.0",
     "@types/multer": "^2.1.0",
     "@types/node-cron": "^3.0.11",

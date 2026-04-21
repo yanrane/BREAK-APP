@@ -2,7 +2,7 @@ import prisma from '../lib/prisma';
 import { hashPassword, comparePassword } from '../lib/password';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../lib/jwt';
 import { AppError } from '../lib/appError';
-import type { RegisterInput, LoginInput, RefreshInput } from '@break/shared';
+import type { RegisterInput, LoginInput, RefreshInput } from '../lib/schemas';
 
 export interface AuthTokens {
   accessToken: string;
