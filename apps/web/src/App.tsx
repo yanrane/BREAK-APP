@@ -8,6 +8,10 @@ import Missions from './pages/Missions';
 import MissionsHistory from './pages/MissionsHistory';
 import Leaderboard from './pages/Leaderboard';
 import Games from './pages/Games';
+import Onboarding from './pages/Onboarding';
+import Profile from './pages/Profile';
+import Report from './pages/Report';
+import Shop from './pages/Shop';
 
 export default function App() {
   return (
@@ -20,9 +24,13 @@ export default function App() {
           <Route path="/missions/history" element={<MissionsHistory />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/games" element={<Games />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/report" element={<Report />} />
+          <Route path="/shop" element={<Shop />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/onboarding" element={<Onboarding />} />
       </Routes>
     </BrowserRouter>
   );

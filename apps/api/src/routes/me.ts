@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '../middleware/requireAuth';
 import { AppError } from '../lib/appError';
 import prisma from '../lib/prisma';
+import { getReport } from '../services/reportService';
 
 const router: Router = Router();
 
@@ -50,6 +51,45 @@ router.patch('/settings', requireAuth, async (req, res, next) => {
       },
     });
     res.json({ success: true, data: { settings } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const onboardingSchema = z.object({
+  gender: z.enum(['MALE', 'FEMALE']),
+});
+
+// POST /api/v1/me/onboarding — simpan gender & buat telur pet
+router.post('/onboarding', requireAuth, async (req, res, next) => {
+  const result = onboardingSchema.safeParse(req.body);
+  if (!result.success) {
+    return next(new AppError(400, 'VALIDATION_ERROR', result.error.errors[0]?.message ?? 'Input tidak valid'));
+  }
+  try {
+    const [user, pet] = await prisma.$transaction([
+      prisma.user.update({
+        where: { id: req.user!.id },
+        data: { gender: result.data.gender, onboardedAt: new Date() },
+        select: { id: true, gender: true, onboardedAt: true },
+      }),
+      prisma.pet.upsert({
+        where: { userId: req.user!.id },
+        update: {},
+        create: { userId: req.user!.id },
+      }),
+    ]);
+    res.json({ success: true, data: { user, pet } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/v1/me/report — daily report + data profil lengkap
+router.get('/report', requireAuth, async (req, res, next) => {
+  try {
+    const report = await getReport(req.user!.id);
+    res.json({ success: true, data: report });
   } catch (err) {
     next(err);
   }

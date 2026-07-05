@@ -22,7 +22,7 @@ export default function Register() {
       const res = await api.post('/auth/register', data);
       const { accessToken, refreshToken, user } = res.data.data;
       setAuth({ accessToken, refreshToken }, user);
-      navigate('/dashboard');
+      navigate('/onboarding');
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { error?: { message?: string } } } })

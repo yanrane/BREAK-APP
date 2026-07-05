@@ -1,6 +1,7 @@
 import prisma from '../lib/prisma';
 import { AppError } from '../lib/appError';
 import { getWIBStartOfDay } from '../lib/dateUtils';
+import { computeMissionRewards } from './progressionService';
 
 /** Returns missions assigned to the user today (since WIB midnight). */
 export async function getTodayMissions(userId: string) {
@@ -41,6 +42,7 @@ export async function completeMission(
   }
 
   const now = new Date();
+  const rewards = await computeMissionRewards(userId, userMission.mission.points, now);
 
   try {
     const [updated] = await prisma.$transaction([
@@ -57,10 +59,20 @@ export async function completeMission(
       }),
       prisma.user.update({
         where: { id: userId },
-        data: { totalPoints: { increment: userMission.mission.points } },
+        data: rewards.userData,
       }),
+      ...(rewards.petData
+        ? [prisma.pet.update({ where: { userId }, data: rewards.petData })]
+        : []),
     ]);
-    return updated;
+    return {
+      ...updated,
+      rewards: {
+        expGained: rewards.expGained,
+        coinsGained: rewards.coinsGained,
+        eventTitle: rewards.eventTitle,
+      },
+    };
   } catch (err: unknown) {
     const prismaErr = err as { code?: string };
     if (prismaErr?.code === 'P2025') {

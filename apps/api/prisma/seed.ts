@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import 'dotenv/config';
+import prisma from '../src/lib/prisma';
 
 const missions = [
   {
@@ -105,6 +104,21 @@ async function main() {
     });
   }
   console.log(`Seeded ${missions.length} missions.`);
+
+  // Contoh event: 2x EXP Weekend, 7 hari ke depan (hanya jika belum ada event)
+  const existingEvent = await prisma.event.findFirst();
+  if (!existingEvent) {
+    const now = new Date();
+    await prisma.event.create({
+      data: {
+        title: '2x EXP Event',
+        expMultiplier: 2,
+        startsAt: now,
+        endsAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+    console.log('Seeded 2x EXP event (7 hari).');
+  }
 }
 
 main()

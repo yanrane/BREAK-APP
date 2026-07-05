@@ -7,20 +7,50 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  username      String   @unique
-  passwordHash  String
-  avatarUrl     String?
-  totalPoints   Int      @default(0)
-  currentStreak Int      @default(0)
-  createdAt     DateTime @default(now())
+  id               String    @id @default(cuid())
+  email            String    @unique
+  username         String    @unique
+  passwordHash     String
+  avatarUrl        String?
+  totalPoints      Int       @default(0)
+  currentStreak    Int       @default(0)
+  longestStreak    Int       @default(0)
+  lastBrokenStreak Int       @default(0)
+  lastMissionDate  DateTime?
+  exp              Int       @default(0)
+  coins            Int       @default(0)
+  gender           Gender?
+  onboardedAt      DateTime?
+  ownedItems       String[]  @default([])
+  createdAt        DateTime  @default(now())
 
   missions      UserMission[]
   usageLogs     UsageLog[]
   gameScores    GameScore[]
   settings      UserSettings?
   refreshTokens RefreshToken[]
+  pet           Pet?
+}
+
+model Pet {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  name      String    @default("Egg")
+  stage     PetStage  @default(EGG)
+  rarity    PetRarity @default(COMMON)
+  exp       Int       @default(0)
+  hatchedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id            String   @id @default(cuid())
+  title         String
+  expMultiplier Float    @default(2)
+  startsAt      DateTime
+  endsAt        DateTime
 }
 
 model UserSettings {
@@ -116,4 +146,23 @@ enum GameType {
   REACTION
   FAST_CLICK
   PATTERN_MATCH
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum PetStage {
+  EGG
+  BABY
+  TEEN
+  ADULT
+}
+
+enum PetRarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
 }
