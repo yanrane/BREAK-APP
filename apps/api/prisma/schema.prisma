@@ -30,6 +30,7 @@ model User {
   settings      UserSettings?
   refreshTokens RefreshToken[]
   pet           Pet?
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Pet {
@@ -60,6 +61,19 @@ model UserSettings {
   trackedDomains      String[]
   notificationEnabled Boolean  @default(true)
   telegramChatId      String?
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model RefreshToken {

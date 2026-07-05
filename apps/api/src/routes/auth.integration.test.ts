@@ -136,3 +136,59 @@ describe('GET /api/v1/me', () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe('password reset flow', () => {
+  it('resets password with valid token, revokes old sessions, and rejects token reuse', async () => {
+    const app = buildApp();
+    await request(app)
+      .post('/api/v1/auth/register')
+      .send({ email: 'reset@example.com', username: 'resetuser', password: 'password123' });
+
+    // Ambil token langsung dari service (email tidak terkirim di test)
+    const { forgotPassword } = await import('../services/authService');
+    const { token } = await forgotPassword('reset@example.com');
+    expect(token).toBeTruthy();
+
+    const resetRes = await request(app)
+      .post('/api/v1/auth/reset-password')
+      .send({ token, password: 'newpassword456' });
+    expect(resetRes.status).toBe(200);
+    expect(resetRes.body.success).toBe(true);
+
+    // Password lama tidak bisa dipakai, password baru bisa
+    const oldLogin = await request(app)
+      .post('/api/v1/auth/login')
+      .send({ email: 'reset@example.com', password: 'password123' });
+    expect(oldLogin.status).toBe(401);
+
+    const newLogin = await request(app)
+      .post('/api/v1/auth/login')
+      .send({ email: 'reset@example.com', password: 'newpassword456' });
+    expect(newLogin.status).toBe(200);
+
+    // Token sekali pakai
+    const reuse = await request(app)
+      .post('/api/v1/auth/reset-password')
+      .send({ token, password: 'anotherpass789' });
+    expect(reuse.status).toBe(400);
+    expect(reuse.body.error.code).toBe('INVALID_RESET_TOKEN');
+  });
+
+  it('forgot-password responds generically for unknown email', async () => {
+    const app = buildApp();
+    const res = await request(app)
+      .post('/api/v1/auth/forgot-password')
+      .send({ email: 'ghost@example.com' });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('rejects invalid token', async () => {
+    const app = buildApp();
+    const res = await request(app)
+      .post('/api/v1/auth/reset-password')
+      .send({ token: 'bukan-token-valid', password: 'newpassword456' });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('INVALID_RESET_TOKEN');
+  });
+});

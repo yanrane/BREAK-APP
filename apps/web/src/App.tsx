@@ -9,6 +9,8 @@ import MissionsHistory from './pages/MissionsHistory';
 import Leaderboard from './pages/Leaderboard';
 import Games from './pages/Games';
 import Onboarding from './pages/Onboarding';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import Report from './pages/Report';
 import Shop from './pages/Shop';
@@ -31,6 +33,8 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </BrowserRouter>
   );

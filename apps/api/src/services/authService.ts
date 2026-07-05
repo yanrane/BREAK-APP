@@ -1,7 +1,9 @@
+import { createHash, randomBytes } from 'crypto';
 import prisma from '../lib/prisma';
 import { hashPassword, comparePassword } from '../lib/password';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../lib/jwt';
 import { AppError } from '../lib/appError';
+import { sendResetEmail } from '../lib/mailer';
 import type { RegisterInput, LoginInput, RefreshInput } from '../lib/schemas';
 
 export interface AuthTokens {
@@ -69,6 +71,56 @@ export async function refresh(input: RefreshInput): Promise<{ accessToken: strin
 
   const accessToken = signAccessToken(userId);
   return { accessToken };
+}
+
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 jam
+
+function hashResetToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+/**
+ * Buat token reset password dan kirim link via email.
+ * Selalu "sukses" ke caller agar tidak membocorkan email mana yang terdaftar.
+ * Return token mentah untuk keperluan test — route TIDAK boleh mengeksposnya.
+ */
+export async function forgotPassword(email: string): Promise<{ token: string | null }> {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return { token: null };
+
+  const token = randomBytes(32).toString('hex');
+  await prisma.passwordResetToken.create({
+    data: {
+      userId: user.id,
+      tokenHash: hashResetToken(token),
+      expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
+    },
+  });
+
+  const frontendUrl = (process.env.FRONTEND_URL ?? 'http://localhost:5173').split(',')[0];
+  await sendResetEmail(email, `${frontendUrl}/reset-password?token=${token}`);
+  return { token };
+}
+
+/**
+ * Set password baru dari token reset. Token sekali pakai, expired 1 jam.
+ * Semua refresh token user dicabut agar sesi lama tidak bisa dipakai lagi.
+ */
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  const record = await prisma.passwordResetToken.findUnique({
+    where: { tokenHash: hashResetToken(token) },
+  });
+
+  if (!record || record.usedAt || record.expiresAt < new Date()) {
+    throw new AppError(400, 'INVALID_RESET_TOKEN', 'Link reset tidak valid atau sudah kedaluwarsa');
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: record.userId }, data: { passwordHash } }),
+    prisma.passwordResetToken.update({ where: { id: record.id }, data: { usedAt: new Date() } }),
+    prisma.refreshToken.deleteMany({ where: { userId: record.userId } }),
+  ]);
 }
 
 async function createTokenPair(userId: string): Promise<AuthTokens> {

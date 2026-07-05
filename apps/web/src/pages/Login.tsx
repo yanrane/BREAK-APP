@@ -77,6 +77,14 @@ export default function Login() {
               {errors.password && (
                 <p className="text-coral text-xs mt-1 font-semibold">{errors.password.message}</p>
               )}
+              <p className="text-right mt-1.5">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-muted font-semibold hover:text-ink underline"
+                >
+                  Lupa password?
+                </Link>
+              </p>
             </div>
 
             {errors.root && (
