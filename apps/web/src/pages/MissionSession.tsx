@@ -65,9 +65,11 @@ export default function MissionSession() {
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [phase]);
 
-  const enterFullscreen = useCallback(async () => {
-    // Fullscreen bisa ditolak browser (iOS Safari) — sesi tetap jalan, pause tetap aktif via visibilitychange
-    try { await containerRef.current?.requestFullscreen(); } catch { /* noop */ }
+  const enterFullscreen = useCallback(() => {
+    // Fire-and-forget: promise requestFullscreen bisa menggantung menunggu izin di sebagian
+    // browser — jangan pernah di-await agar transisi sesi tidak ikut tertahan.
+    // Ditolak (iOS Safari) juga aman: sesi tetap jalan, pause tetap aktif via visibilitychange.
+    containerRef.current?.requestFullscreen().catch(() => {});
   }, []);
 
   const exitFullscreen = useCallback(() => {
@@ -82,9 +84,9 @@ export default function MissionSession() {
       if (hasTimer && mission.durationMinutes && um.startedAt) {
         const elapsedMs = new Date(serverNow).getTime() - new Date(um.startedAt).getTime();
         endAtRef.current = Date.now() + mission.durationMinutes * 60 * 1000 - elapsedMs;
-        await enterFullscreen();
         setPaused(false);
         setPhase('countdown');
+        enterFullscreen();
       } else {
         setPhase('capture');
       }
@@ -194,7 +196,7 @@ export default function MissionSession() {
           <p className="text-sm text-muted font-medium">Kamu keluar dari mode fokus. Lanjutkan atau batalkan?</p>
           <div className="flex gap-3">
             <button
-              onClick={async () => { await enterFullscreen(); setPaused(false); }}
+              onClick={() => { setPaused(false); enterFullscreen(); }}
               className="flex-1 py-2.5 text-sm font-extrabold border-2 border-ink bg-ink text-cream shadow-hard-sm"
             >
               Lanjutkan
