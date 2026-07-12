@@ -113,11 +113,29 @@ describe('GET /api/v1/missions/today', () => {
 });
 
 describe('POST /api/v1/missions/:id/complete', () => {
+  /**
+   * Buat UserMission ASSIGNED langsung ke misi 'test-physical' (proofType PHOTO,
+   * durationMinutes null dari beforeAll di atas) — bypass assignMissionsForUser.
+   * Pool assignMissionsForUser juga berisi misi seed asli (TIMER/PHOTO_AND_TIMER,
+   * lihat prisma/seed.ts) yang bisa terpilih secara acak dan butuh timer, jadi
+   * tidak aman mengandalkan random assignment untuk skenario "langsung lolos foto".
+   */
+  async function createPhotoUserMission(uid: string) {
+    const mission = await prisma.mission.findUniqueOrThrow({ where: { slug: 'test-physical' } });
+    return prisma.userMission.create({
+      data: { userId: uid, missionId: mission.id, status: 'ASSIGNED' },
+      include: { mission: true },
+    });
+  }
+
   it('marks mission as VERIFIED and awards points', async () => {
-    await assignMissionsForUser(userId);
-    const userMissions = await prisma.userMission.findMany({ where: { userId } });
-    const userMissionId = userMissions[0].id;
-    const missionPoints = (await prisma.mission.findUnique({ where: { id: userMissions[0].missionId } }))!.points;
+    const userMission = await createPhotoUserMission(userId);
+    const userMissionId = userMission.id;
+    const missionPoints = userMission.mission.points;
+
+    await request(app)
+      .post(`/api/v1/missions/${userMissionId}/start`)
+      .set('Authorization', `Bearer ${accessToken}`);
 
     const res = await request(app)
       .post(`/api/v1/missions/${userMissionId}/complete`)
@@ -134,16 +152,18 @@ describe('POST /api/v1/missions/:id/complete', () => {
   });
 
   it('returns 409 if mission already completed', async () => {
-    await assignMissionsForUser(userId);
-    const userMission = (await prisma.userMission.findFirst({ where: { userId } }))!;
+    const userMission = await createPhotoUserMission(userId);
 
-    // Complete once
+    // Start, then complete once
+    await request(app)
+      .post(`/api/v1/missions/${userMission.id}/start`)
+      .set('Authorization', `Bearer ${accessToken}`);
     await request(app)
       .post(`/api/v1/missions/${userMission.id}/complete`)
       .set('Authorization', `Bearer ${accessToken}`)
       .attach('proof', MINIMAL_JPEG, { filename: 'proof.jpg', contentType: 'image/jpeg' });
 
-    // Try again — should fail
+    // Try again — should fail (already VERIFIED)
     const res = await request(app)
       .post(`/api/v1/missions/${userMission.id}/complete`)
       .set('Authorization', `Bearer ${accessToken}`)
@@ -154,8 +174,11 @@ describe('POST /api/v1/missions/:id/complete', () => {
   });
 
   it('returns 400 if no proof file attached', async () => {
-    await assignMissionsForUser(userId);
-    const userMission = (await prisma.userMission.findFirst({ where: { userId } }))!;
+    const userMission = await createPhotoUserMission(userId);
+
+    await request(app)
+      .post(`/api/v1/missions/${userMission.id}/start`)
+      .set('Authorization', `Bearer ${accessToken}`);
 
     const res = await request(app)
       .post(`/api/v1/missions/${userMission.id}/complete`)
@@ -204,5 +227,159 @@ describe('GET /api/v1/missions/history', () => {
   it('returns 401 without auth', async () => {
     const res = await request(app).get('/api/v1/missions/history');
     expect(res.status).toBe(401);
+  });
+});
+
+describe('anti-cheat mission flow', () => {
+  let seq = 0;
+
+  /**
+   * Register user baru + buat 1 Mission & UserMission ASSIGNED langsung lewat Prisma
+   * (bypass cron assignDailyMissions) supaya proofType/durationMinutes bisa dikontrol per test.
+   */
+  async function setupUserWithMission(
+    proofType: 'PHOTO' | 'TIMER' | 'PHOTO_AND_TIMER',
+    durationMinutes: number | null,
+  ) {
+    seq += 1;
+    const email = `anticheat${seq}@missions-test.com`;
+    const username = `anticheat${seq}`;
+
+    const reg = await request(app)
+      .post('/api/v1/auth/register')
+      .send({ email, username, password: 'password123' });
+
+    const token = reg.body.data.accessToken as string;
+    const uId = reg.body.data.user.id as string;
+
+    const mission = await prisma.mission.create({
+      data: {
+        slug: `test-${proofType.toLowerCase()}-${Date.now()}-${seq}`,
+        title: 'Misi Test',
+        description: 'test',
+        category: 'MENTAL',
+        points: 10,
+        requiresProof: proofType !== 'TIMER',
+        proofType,
+        durationMinutes,
+      },
+    });
+    const userMission = await prisma.userMission.create({
+      data: { userId: uId, missionId: mission.id, status: 'ASSIGNED' },
+    });
+    return { token, userId: uId, userMission };
+  }
+
+  const PNG_1x1 = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    'base64',
+  );
+
+  it('menolak complete sebelum start (MISSION_NOT_STARTED)', async () => {
+    const { token, userMission } = await setupUserWithMission('TIMER', 15);
+
+    const res = await request(app)
+      .post(`/api/v1/missions/${userMission.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('MISSION_NOT_STARTED');
+  });
+
+  it('start mengembalikan IN_PROGRESS + serverNow, lalu menolak complete sebelum durasi lewat', async () => {
+    const { token, userMission } = await setupUserWithMission('TIMER', 15);
+
+    const startRes = await request(app)
+      .post(`/api/v1/missions/${userMission.id}/start`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(startRes.status).toBe(200);
+    expect(startRes.body.data.userMission.status).toBe('IN_PROGRESS');
+    expect(startRes.body.data.serverNow).toBeTruthy();
+
+    const res = await request(app)
+      .post(`/api/v1/missions/${userMission.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('TIMER_NOT_ELAPSED');
+  });
+
+  it('meloloskan complete setelah durasi lewat (startedAt dimundurkan via DB)', async () => {
+    const { token, userMission } = await setupUserWithMission('TIMER', 15);
+
+    await request(app)
+      .post(`/api/v1/missions/${userMission.id}/start`)
+      .set('Authorization', `Bearer ${token}`);
+    // Simulasikan 16 menit berlalu — jam server tetap sumber kebenaran
+    await prisma.userMission.update({
+      where: { id: userMission.id },
+      data: { startedAt: new Date(Date.now() - 16 * 60 * 1000) },
+    });
+
+    const res = await request(app)
+      .post(`/api/v1/missions/${userMission.id}/complete`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.status).toBe('VERIFIED');
+  });
+
+  it('menolak foto duplikat lintas misi (PROOF_DUPLICATE)', async () => {
+    const { token, userId: uId, userMission } = await setupUserWithMission('PHOTO', null);
+
+    await request(app)
+      .post(`/api/v1/missions/${userMission.id}/start`)
+      .set('Authorization', `Bearer ${token}`);
+    const first = await request(app)
+      .post(`/api/v1/missions/${userMission.id}/complete`)
+      .set('Authorization', `Bearer ${token}`)
+      .attach('proof', PNG_1x1, 'proof.png');
+    expect(first.status).toBe(200);
+
+    // Misi kedua, foto byte-identik
+    seq += 1;
+    const mission2 = await prisma.mission.create({
+      data: {
+        slug: `test-photo-dup-${Date.now()}-${seq}`,
+        title: 'Misi Test 2',
+        description: 'test',
+        category: 'MENTAL',
+        points: 10,
+        requiresProof: true,
+        proofType: 'PHOTO',
+        durationMinutes: null,
+      },
+    });
+    const um2 = await prisma.userMission.create({
+      data: { userId: uId, missionId: mission2.id, status: 'ASSIGNED' },
+    });
+    await request(app)
+      .post(`/api/v1/missions/${um2.id}/start`)
+      .set('Authorization', `Bearer ${token}`);
+    const second = await request(app)
+      .post(`/api/v1/missions/${um2.id}/complete`)
+      .set('Authorization', `Bearer ${token}`)
+      .attach('proof', PNG_1x1, 'proof.png');
+
+    expect(second.status).toBe(400);
+    expect(second.body.error.code).toBe('PROOF_DUPLICATE');
+  });
+
+  it('cancel mengembalikan ke ASSIGNED dan bisa start ulang', async () => {
+    const { token, userMission } = await setupUserWithMission('TIMER', 15);
+
+    await request(app)
+      .post(`/api/v1/missions/${userMission.id}/start`)
+      .set('Authorization', `Bearer ${token}`);
+    const cancelRes = await request(app)
+      .post(`/api/v1/missions/${userMission.id}/cancel`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(cancelRes.status).toBe(200);
+    expect(cancelRes.body.data.status).toBe('ASSIGNED');
+    expect(cancelRes.body.data.startedAt).toBeNull();
+
+    const restart = await request(app)
+      .post(`/api/v1/missions/${userMission.id}/start`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(restart.status).toBe(200);
+    expect(restart.body.data.userMission.status).toBe('IN_PROGRESS');
   });
 });
