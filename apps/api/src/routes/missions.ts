@@ -70,10 +70,17 @@ router.post(
       );
       res.json({ success: true, data: updated });
     } catch (err) {
-      // Bersihkan file upload lokal kalau transaksi DB gagal
-      if (req.proofPath && !process.env.BLOB_READ_WRITE_TOKEN) {
-        const uploadDir = process.env.UPLOAD_DIR ?? './uploads';
-        fsp.unlink(path.join(uploadDir, path.basename(req.proofPath))).catch(() => {});
+      // Bersihkan file yatim kalau complete ditolak — dup/timer adalah jalur normal,
+      // tanpa ini storage prod tumbuh terus tiap percobaan yang gagal
+      if (req.proofPath) {
+        if (process.env.BLOB_READ_WRITE_TOKEN) {
+          import('@vercel/blob')
+            .then(({ del }) => del(req.proofPath!))
+            .catch(() => {});
+        } else {
+          const uploadDir = process.env.UPLOAD_DIR ?? './uploads';
+          fsp.unlink(path.join(uploadDir, path.basename(req.proofPath))).catch(() => {});
+        }
       }
       next(err);
     }

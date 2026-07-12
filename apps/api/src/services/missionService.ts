@@ -42,12 +42,20 @@ export async function startMission(userId: string, userMissionId: string) {
     throw new AppError(409, 'MISSION_ALREADY_COMPLETED', 'Misi sudah diselesaikan');
   }
 
-  const updated = await prisma.userMission.update({
-    where: { id: userMissionId, status: 'ASSIGNED' },
-    data: { status: 'IN_PROGRESS', startedAt: new Date() },
-    include: { mission: true },
-  });
-  return { userMission: updated, serverNow: new Date().toISOString() };
+  try {
+    const updated = await prisma.userMission.update({
+      where: { id: userMissionId, status: 'ASSIGNED' },
+      data: { status: 'IN_PROGRESS', startedAt: new Date() },
+      include: { mission: true },
+    });
+    return { userMission: updated, serverNow: new Date().toISOString() };
+  } catch (err: unknown) {
+    // Race: status berubah di antara findUnique dan update
+    if ((err as { code?: string })?.code === 'P2025') {
+      throw new AppError(409, 'MISSION_ALREADY_COMPLETED', 'Misi sudah diselesaikan');
+    }
+    throw err;
+  }
 }
 
 /** Batalkan sesi misi: kembali ke ASSIGNED, startedAt dihapus (bisa dicoba ulang). */
@@ -63,11 +71,19 @@ export async function cancelMission(userId: string, userMissionId: string) {
     throw new AppError(409, 'MISSION_NOT_IN_PROGRESS', 'Misi tidak sedang berjalan');
   }
 
-  return prisma.userMission.update({
-    where: { id: userMissionId, status: 'IN_PROGRESS' },
-    data: { status: 'ASSIGNED', startedAt: null },
-    include: { mission: true },
-  });
+  try {
+    return await prisma.userMission.update({
+      where: { id: userMissionId, status: 'IN_PROGRESS' },
+      data: { status: 'ASSIGNED', startedAt: null },
+      include: { mission: true },
+    });
+  } catch (err: unknown) {
+    // Race: misi keburu complete/berubah status
+    if ((err as { code?: string })?.code === 'P2025') {
+      throw new AppError(409, 'MISSION_NOT_IN_PROGRESS', 'Misi tidak sedang berjalan');
+    }
+    throw err;
+  }
 }
 
 /**

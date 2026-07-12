@@ -114,8 +114,17 @@ export default function MissionSession() {
       const code = (err as { response?: { data?: { error?: { code?: string } } } })
         ?.response?.data?.error?.code;
       if (code === 'TIMER_NOT_ELAPSED') {
-        // Jam server bilang belum selesai — kembali ke countdown (jangan percaya jam device)
+        // Jam server bilang belum selesai (jam device kecepatan) — rekalibrasi endAt
+        // dari server via start idempoten, supaya countdown tidak bounce balik ke 0
         setSubmitError('Timer server belum selesai — tunggu sebentar lagi.');
+        try {
+          const { userMission: um, serverNow } = await startMission(userMissionId);
+          if (mission?.durationMinutes && um.startedAt) {
+            const elapsedMs = new Date(serverNow).getTime() - new Date(um.startedAt).getTime();
+            endAtRef.current = Date.now() + mission.durationMinutes * 60 * 1000 - elapsedMs;
+          }
+        } catch { /* pakai endAt lama kalau rekalibrasi gagal */ }
+        setPaused(false);
         setPhase('countdown');
       } else if (code === 'PROOF_DUPLICATE') {
         setSubmitError('Foto ini sudah pernah dipakai. Jepret foto baru ya.');
