@@ -9,15 +9,18 @@ export interface Mission {
   category: 'PHYSICAL' | 'MENTAL' | 'SOCIAL' | 'CREATIVE';
   points: number;
   requiresProof: boolean;
+  proofType: 'PHOTO' | 'TIMER' | 'PHOTO_AND_TIMER';
+  durationMinutes: number | null;
 }
 
 export interface UserMission {
   id: string;
   missionId: string;
-  status: 'ASSIGNED' | 'COMPLETED' | 'VERIFIED' | 'REJECTED';
+  status: 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'VERIFIED' | 'REJECTED';
   proofUrl: string | null;
   pointsEarned: number;
   assignedAt: string;
+  startedAt: string | null;
   completedAt: string | null;
   mission: Mission;
 }
@@ -49,21 +52,45 @@ export function useTodayMissions() {
 
   useEffect(() => { fetchMissions(); }, [fetchMissions]);
 
-  const completeMission = async (userMissionId: string, proofFile: File): Promise<UserMission> => {
-    const formData = new FormData();
-    formData.append('proof', proofFile);
-    const res = await api.post<{ success: true; data: UserMission }>(
-      `/missions/${userMissionId}/complete`,
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } },
+  const startMission = async (userMissionId: string) => {
+    const res = await api.post<{ success: true; data: { userMission: UserMission; serverNow: string } }>(
+      `/missions/${userMissionId}/start`,
     );
+    const { userMission, serverNow } = res.data.data;
+    setMissions((prev) => prev.map((m) => (m.id === userMissionId ? userMission : m)));
+    return { userMission, serverNow };
+  };
+
+  const cancelMission = async (userMissionId: string) => {
+    const res = await api.post<{ success: true; data: UserMission }>(
+      `/missions/${userMissionId}/cancel`,
+    );
+    setMissions((prev) => prev.map((m) => (m.id === userMissionId ? res.data.data : m)));
+    return res.data.data;
+  };
+
+  const completeMission = async (userMissionId: string, proofFile?: File): Promise<UserMission> => {
+    let res;
+    if (proofFile) {
+      const formData = new FormData();
+      formData.append('proof', proofFile);
+      res = await api.post<{ success: true; data: UserMission }>(
+        `/missions/${userMissionId}/complete`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+    } else {
+      res = await api.post<{ success: true; data: UserMission }>(
+        `/missions/${userMissionId}/complete`,
+      );
+    }
     setMissions((prev) =>
       prev.map((m) => (m.id === userMissionId ? res.data.data : m)),
     );
     return res.data.data;
   };
 
-  return { missions, loading, error, completeMission, refetch: fetchMissions };
+  return { missions, loading, error, startMission, cancelMission, completeMission, refetch: fetchMissions };
 }
 
 export function useMissionHistory(page: number, limit = 20) {

@@ -12,7 +12,7 @@ interface DashboardUser {
 
 interface TodayMission {
   id: string;
-  status: 'ASSIGNED' | 'COMPLETED' | 'VERIFIED' | 'REJECTED';
+  status: 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'VERIFIED' | 'REJECTED';
 }
 
 export interface DashboardData {
