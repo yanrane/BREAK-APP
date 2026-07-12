@@ -18,13 +18,14 @@ const CATEGORY_LABEL: Record<string, string> = {
 interface MissionCardProps {
   userMission: UserMission;
   apiBaseUrl?: string;
-  onComplete: (userMissionId: string) => void;
+  onStart: (userMissionId: string) => void;
 }
 
-export default function MissionCard({ userMission, apiBaseUrl = '', onComplete }: MissionCardProps) {
+export default function MissionCard({ userMission, apiBaseUrl = '', onStart }: MissionCardProps) {
   const { mission, status, proofUrl } = userMission;
   const isVerified = status === 'VERIFIED';
   const isCompleted = status === 'COMPLETED' || isVerified;
+  const isInProgress = status === 'IN_PROGRESS';
 
   return (
     <div
@@ -76,10 +77,10 @@ export default function MissionCard({ userMission, apiBaseUrl = '', onComplete }
 
         {!isCompleted && (
           <button
-            onClick={() => onComplete(userMission.id)}
+            onClick={() => onStart(userMission.id)}
             className="w-full py-2.5 text-sm font-extrabold border-2 border-ink bg-ink text-cream shadow-hard-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[2px] active:translate-y-[2px] transition-all duration-100"
           >
-            Selesaikan →
+            {isInProgress ? 'Lanjutkan Sesi →' : '▶ Start Mission'}
           </button>
         )}
       </div>
