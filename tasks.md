@@ -1,7 +1,7 @@
 # Tasks — BREAK APP (+ RIANI)
 
 ## Active — BREAK
-- **P1** Deploy misi anti-curang ke production (branch `feat/anti-cheat-missions` → merge → migrate Neon + seed + deploy api/web + alias) — MENUNGGU KONFIRMASI Tristan/Boss. Smoke test kamera live + pause overlay di HP setelah deploy.
+- **P1** Smoke test kamera live + pause overlay + full flow misi di HP sungguhan (butuh misi ter-assign — cron 00:00 WIB; akun test prod `jet-smoketest@break.local`).
 - **P2** Backlog AI Companion Tristan (12 Jul), siklus berikutnya: Daily Reflection (paling kecil, data sudah ada di `/me/report`), Brain Training Games (Sudoku dkk), animasi UX (streak/pet/misi/micro-interaction), Anti-Exit penuh (banner app-wide).
 - **P3** Follow-up minor final review anti-curang: validasi service misi TIMER wajib punya durationMinutes (salah konfigurasi = instant-complete); payload `remainingSeconds` terstruktur di TIMER_NOT_ELAPSED; test ownership start/cancel + case PHOTO_AND_TIMER; handle sesi IN_PROGRESS lewat tengah malam WIB; title read-20pages masih "20 halaman" vs deskripsi "20 menit".
 - **P1** Set `RESEND_API_KEY` di Vercel project `api` (production) + redeploy — email reset password belum terkirim ke user (link hanya di function logs). Butuh akun resend.com (gratis 3.000 email/bln).

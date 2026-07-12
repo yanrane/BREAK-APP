@@ -1,11 +1,11 @@
 # Current State — per 2026-07-12 (sesi anti-curang misi)
 
-## BREAK — Misi Anti-Curang (BARU, sesi 12 Jul, branch `feat/anti-cheat-missions`, BELUM deploy)
+## BREAK — Misi Anti-Curang (sesi 12 Jul — **LIVE DI PRODUCTION**, merge `a013280`)
 - Request Tristan: sistem agar misi harian tidak bisa dicurangi, TANPA AI. Spec: `docs/superpowers/specs/2026-07-12-anti-cheat-missions-design.md`, plan: `docs/superpowers/plans/2026-07-12-anti-cheat-missions.md`.
 - **Selesai & terverifikasi di dev**: timer server-authoritative (start/cancel/complete, `TIMER_NOT_ELAPSED` + sisa detik), bukti foto wajib kamera live in-app (komponen `CameraCapture`, tanpa file picker), dedup foto SHA-256 global (`PROOF_DUPLICATE`), Focus Mode fullscreen + pause overlay, halaman `/missions/:id/active`, status `IN_PROGRESS`, misi baru `no-phone-15min`, 4 misi "screenshot" dikonversi TIMER murni.
 - Verifikasi: typecheck 4 project, 62 unit + 42 integration PASS (3x run), build sukses, smoke test browser end-to-end (register→onboarding→start→countdown resume terkalibrasi server→complete curang ditolak 400→complete sah VERIFIED→fallback kamera desktop).
 - Bug ditemukan & difix saat smoke test: `await requestFullscreen()` bisa menggantung → transisi countdown tertahan (commit `271a014`).
-- **Belum**: deploy production (migrate Neon + seed + api/web + alias) — menunggu konfirmasi. Tes kamera live & pause perlu HP sungguhan saat smoke prod.
+- **Deployed 12 Jul**: merge ke main + push origin, migration `add_anti_cheat_missions` applied ke Neon, seed 11 misi prod terverifikasi via psql, api + web deployed, alias `break-id.vercel.app` di-set ke `web-bpn9epykb`. Smoke prod: landing/register/onboarding/missions bersih tanpa error console. Akun test prod: `jet-smoketest@break.local`. Sisa: tes kamera live + pause overlay di HP sungguhan setelah cron misi 00:00 WIB.
 
 > Sesi 5 Jul malam (JET) full mengerjakan **RUMAH JAHIT RIANI**, bukan BREAK.
 
