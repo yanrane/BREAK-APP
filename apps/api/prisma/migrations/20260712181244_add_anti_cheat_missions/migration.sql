@@ -2,7 +2,7 @@
 CREATE TYPE "ProofType" AS ENUM ('PHOTO', 'TIMER', 'PHOTO_AND_TIMER');
 
 -- AlterEnum
-ALTER TYPE "MissionStatus" ADD VALUE 'IN_PROGRESS';
+ALTER TYPE "MissionStatus" ADD VALUE 'IN_PROGRESS' BEFORE 'COMPLETED';
 
 -- AlterTable
 ALTER TABLE "Mission" ADD COLUMN     "durationMinutes" INTEGER,
