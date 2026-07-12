@@ -5,6 +5,8 @@ import { requireAuth } from '../middleware/requireAuth';
 import { uploadProofMiddleware } from '../middleware/uploadProof';
 import {
   getTodayMissions,
+  startMission,
+  cancelMission,
   completeMission,
   getMissionHistory,
 } from '../services/missionService';
@@ -33,7 +35,27 @@ router.get('/history', requireAuth, async (req: Request, res: Response, next: Ne
   }
 });
 
-// POST /api/v1/missions/:userMissionId/complete
+// POST /api/v1/missions/:userMissionId/start — mulai sesi (startedAt = jam server)
+router.post('/:userMissionId/start', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await startMission(req.user!.id, req.params.userMissionId);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/missions/:userMissionId/cancel — batalkan sesi, kembali ke ASSIGNED
+router.post('/:userMissionId/cancel', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const updated = await cancelMission(req.user!.id, req.params.userMissionId);
+    res.json({ success: true, data: updated });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/missions/:userMissionId/complete — file opsional (misi TIMER murni tanpa foto)
 router.post(
   '/:userMissionId/complete',
   requireAuth,
@@ -43,14 +65,22 @@ router.post(
       const updated = await completeMission(
         req.user!.id,
         req.params.userMissionId,
-        req.proofPath!,
+        req.proofPath,
+        req.proofHash,
       );
       res.json({ success: true, data: updated });
     } catch (err) {
-      // Clean up the uploaded file if the DB transaction failed
+      // Bersihkan file yatim kalau complete ditolak — dup/timer adalah jalur normal,
+      // tanpa ini storage prod tumbuh terus tiap percobaan yang gagal
       if (req.proofPath) {
-        const uploadDir = process.env.UPLOAD_DIR ?? './uploads';
-        fsp.unlink(path.join(uploadDir, path.basename(req.proofPath))).catch(() => {});
+        if (process.env.BLOB_READ_WRITE_TOKEN) {
+          import('@vercel/blob')
+            .then(({ del }) => del(req.proofPath!))
+            .catch(() => {});
+        } else {
+          const uploadDir = process.env.UPLOAD_DIR ?? './uploads';
+          fsp.unlink(path.join(uploadDir, path.basename(req.proofPath))).catch(() => {});
+        }
       }
       next(err);
     }

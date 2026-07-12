@@ -1,6 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import { promises as fsp } from 'fs';
+import { createHash } from 'crypto';
 import { fromBuffer as fileTypeFromBuffer } from 'file-type';
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { AppError } from '../lib/appError';
@@ -25,7 +26,8 @@ export const uploadProofMiddleware: RequestHandler[] = [
   upload.single('proof'),
   async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     if (!req.file) {
-      return next(new AppError(400, 'PROOF_REQUIRED', 'File bukti wajib diunggah'));
+      // Misi TIMER murni tidak mengirim file — kewajiban foto divalidasi di missionGuard
+      return next();
     }
 
     try {
@@ -33,6 +35,8 @@ export const uploadProofMiddleware: RequestHandler[] = [
       if (!detected || !ALLOWED_MIME_TYPES.has(detected.mime)) {
         return next(new AppError(400, 'INVALID_FILE_TYPE', 'Format file tidak valid'));
       }
+
+      req.proofHash = createHash('sha256').update(req.file.buffer).digest('hex');
 
       const filename = `${crypto.randomUUID()}.${detected.ext}`;
 

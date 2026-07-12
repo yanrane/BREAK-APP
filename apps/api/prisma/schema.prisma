@@ -89,17 +89,19 @@ model RefreshToken {
 }
 
 model Mission {
-  id            String          @id @default(cuid())
-  slug          String          @unique
-  title         String
-  description   String
-  category      MissionCategory
-  points        Int
-  requiresProof Boolean         @default(true)
-  cooldownHours Int             @default(24)
-  isActive      Boolean         @default(true)
+  id              String          @id @default(cuid())
+  slug            String          @unique
+  title           String
+  description     String
+  category        MissionCategory
+  points          Int
+  requiresProof   Boolean         @default(true)
+  cooldownHours   Int             @default(24)
+  isActive        Boolean         @default(true)
+  proofType       ProofType       @default(PHOTO)
+  durationMinutes Int?
 
-  userMissions  UserMission[]
+  userMissions    UserMission[]
 }
 
 model UserMission {
@@ -108,8 +110,10 @@ model UserMission {
   missionId    String
   status       MissionStatus
   proofUrl     String?
+  proofHash    String?       @unique
   pointsEarned Int           @default(0)
   assignedAt   DateTime      @default(now())
+  startedAt    DateTime?
   completedAt  DateTime?
   verifiedAt   DateTime?
 
@@ -151,9 +155,16 @@ enum MissionCategory {
 
 enum MissionStatus {
   ASSIGNED
+  IN_PROGRESS
   COMPLETED
   VERIFIED
   REJECTED
+}
+
+enum ProofType {
+  PHOTO
+  TIMER
+  PHOTO_AND_TIMER
 }
 
 enum GameType {

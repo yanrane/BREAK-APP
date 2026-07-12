@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Missions from './pages/Missions';
+import MissionSession from './pages/MissionSession';
 import MissionsHistory from './pages/MissionsHistory';
 import Leaderboard from './pages/Leaderboard';
 import Games from './pages/Games';
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/missions" element={<Missions />} />
           <Route path="/missions/history" element={<MissionsHistory />} />
+          <Route path="/missions/:userMissionId/active" element={<MissionSession />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/games" element={<Games />} />
           <Route path="/profile" element={<Profile />} />

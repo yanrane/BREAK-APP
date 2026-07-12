@@ -1,42 +1,12 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTodayMissions } from '../features/missions/useMissions';
 import MissionCard from '../features/missions/MissionCard';
-import ProofUploadModal from '../features/missions/ProofUploadModal';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') ?? '';
 
 export default function Missions() {
-  const { missions, loading, error, completeMission, refetch } = useTodayMissions();
-  const [selectedMissionId, setSelectedMissionId] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const selectedUserMission = missions.find((m) => m.id === selectedMissionId);
-
-  const handleComplete = (userMissionId: string) => {
-    setSelectedMissionId(userMissionId);
-    setSubmitError(null);
-  };
-
-  const handleModalClose = () => {
-    setSelectedMissionId(null);
-    setSubmitError(null);
-  };
-
-  const handleProofSubmit = async (file: File) => {
-    if (!selectedMissionId) return;
-    try {
-      setIsSubmitting(true);
-      setSubmitError(null);
-      await completeMission(selectedMissionId, file);
-      setSelectedMissionId(null);
-    } catch {
-      setSubmitError('Gagal mengirim bukti. Coba lagi.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const navigate = useNavigate();
+  const { missions, loading, error, refetch } = useTodayMissions();
 
   const completed = missions.filter((m) => m.status === 'VERIFIED' || m.status === 'COMPLETED').length;
 
@@ -90,7 +60,7 @@ export default function Missions() {
               key={um.id}
               userMission={um}
               apiBaseUrl={API_BASE}
-              onComplete={handleComplete}
+              onStart={(id) => navigate(`/missions/${id}/active`)}
             />
           ))}
           <div className="flex items-center justify-between pt-2">
@@ -101,20 +71,6 @@ export default function Missions() {
           </div>
         </div>
       )}
-
-      {submitError && (
-        <div className="border-2 border-coral px-4 py-2 mt-4">
-          <p className="text-coral text-sm font-semibold">{submitError}</p>
-        </div>
-      )}
-
-      <ProofUploadModal
-        isOpen={!!selectedMissionId}
-        missionTitle={selectedUserMission?.mission.title ?? ''}
-        isSubmitting={isSubmitting}
-        onClose={handleModalClose}
-        onSubmit={handleProofSubmit}
-      />
     </div>
   );
 }

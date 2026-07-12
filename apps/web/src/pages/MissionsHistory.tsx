@@ -5,6 +5,7 @@ import { cn } from '../lib/cn';
 
 const STATUS_LABEL: Record<string, string> = {
   ASSIGNED: 'Belum selesai',
+  IN_PROGRESS: 'Berlangsung',
   COMPLETED: 'Menunggu verifikasi',
   VERIFIED: 'Terverifikasi',
   REJECTED: 'Ditolak',
@@ -12,6 +13,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_STYLE: Record<string, string> = {
   ASSIGNED: 'bg-cream-2 text-muted border-ink/30',
+  IN_PROGRESS: 'border-ink bg-cream',
   COMPLETED: 'bg-[#FFF9C4] text-[#854D0E] border-[#854D0E]',
   VERIFIED: 'bg-lime text-ink border-ink',
   REJECTED: 'bg-red-100 text-coral border-coral',
