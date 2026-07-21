@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma';
+import { AppError } from '../lib/appError';
 import { STAGE_THRESHOLDS, unlockedFeatures } from '../lib/progression';
 import { SHOP_ITEMS } from '../lib/shopItems';
 import { getActiveEvent } from './progressionService';
@@ -47,5 +48,38 @@ export async function getReport(userId: string) {
     pet,
     ownedItems: SHOP_ITEMS.filter((i) => user.ownedItems.includes(i.id)),
     activeEvent,
+  };
+}
+
+/**
+ * Profil publik berdasarkan username. Hanya data non-sensitif —
+ * tanpa id, email, gender, coins, atau settings.
+ */
+export async function getPublicProfile(username: string) {
+  const user = await prisma.user.findUnique({
+    where: { username },
+    include: { pet: true },
+  });
+  if (!user) {
+    throw new AppError(404, 'USER_NOT_FOUND', 'Pengguna tidak ditemukan');
+  }
+
+  const [missionsCompleted, higherRanked] = await Promise.all([
+    prisma.userMission.count({ where: { userId: user.id, status: 'VERIFIED' } }),
+    prisma.user.count({ where: { totalPoints: { gt: user.totalPoints } } }),
+  ]);
+
+  return {
+    username: user.username,
+    avatarUrl: user.avatarUrl,
+    joinedAt: user.createdAt,
+    totalPoints: user.totalPoints,
+    currentStreak: user.currentStreak,
+    longestStreak: user.longestStreak,
+    missionsCompleted,
+    globalRank: higherRanked + 1,
+    pet: user.pet
+      ? { name: user.pet.name, stage: user.pet.stage, rarity: user.pet.rarity, hatchedAt: user.pet.hatchedAt }
+      : null,
   };
 }

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useReport, petEmoji, RARITY_STYLES, STAGE_LABELS } from '../features/profile/useReport';
+import { computeBadges } from '../features/profile/badges';
 import { cn } from '../lib/cn';
 
 const cardClass = 'border-2 border-ink p-5 shadow-hard bg-cream';
@@ -17,15 +18,12 @@ export default function Profile() {
     year: 'numeric',
   });
 
-  const badges = [
-    missionsCompleted >= 1 && { emoji: '🎯', label: 'Misi Pertama' },
-    missionsCompleted >= 10 && { emoji: '🏅', label: '10 Misi Selesai' },
-    missionsCompleted >= 50 && { emoji: '🏆', label: '50 Misi Selesai' },
-    user.longestStreak >= 7 && { emoji: '🔥', label: 'Streak 7 Hari' },
-    user.longestStreak >= 30 && { emoji: '⚡', label: 'Streak 30 Hari' },
-    pet?.hatchedAt && { emoji: '🐣', label: 'Pet Menetas' },
-    globalRank <= 10 && { emoji: '👑', label: 'Top 10 Global' },
-  ].filter(Boolean) as { emoji: string; label: string }[];
+  const badges = computeBadges({
+    missionsCompleted,
+    longestStreak: user.longestStreak,
+    petHatched: Boolean(pet?.hatchedAt),
+    globalRank,
+  });
 
   return (
     <div className="space-y-6">
@@ -34,12 +32,20 @@ export default function Profile() {
           <h1 className="text-2xl font-extrabold tracking-tight">{user.username}</h1>
           <p className="text-sm text-muted font-semibold">Bergabung sejak {joined}</p>
         </div>
-        <Link
-          to="/report"
-          className="px-4 py-2 text-sm font-extrabold border-2 border-ink bg-lime-100 shadow-hard-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100"
-        >
-          📊 Daily Report
-        </Link>
+        <div className="flex gap-2 flex-wrap">
+          <Link
+            to="/report"
+            className="px-4 py-2 text-sm font-extrabold border-2 border-ink bg-lime-100 shadow-hard-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100"
+          >
+            📊 Daily Report
+          </Link>
+          <Link
+            to="/feedback"
+            className="px-4 py-2 text-sm font-extrabold border-2 border-ink bg-cream shadow-hard-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-100"
+          >
+            💬 Feedback
+          </Link>
+        </div>
       </div>
 
       {activeEvent && (

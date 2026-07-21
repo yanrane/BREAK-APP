@@ -15,6 +15,9 @@ import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import Report from './pages/Report';
 import Shop from './pages/Shop';
+import About from './pages/About';
+import Feedback from './pages/Feedback';
+import PublicProfile from './pages/PublicProfile';
 
 export default function App() {
   return (
@@ -31,6 +34,9 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/report" element={<Report />} />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/feedback" element={<Feedback />} />
+          <Route path="/u/:username" element={<PublicProfile />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

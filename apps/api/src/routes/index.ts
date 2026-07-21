@@ -8,6 +8,8 @@ import gamesRouter from './games';
 import cronRouter from './cron';
 import shopRouter from './shop';
 import eventsRouter from './events';
+import feedbackRouter from './feedback';
+import usersRouter from './users';
 
 const router: Router = Router();
 
@@ -20,5 +22,7 @@ router.use('/games', gamesRouter);
 router.use('/cron', cronRouter);
 router.use('/shop', shopRouter);
 router.use('/events', eventsRouter);
+router.use('/feedback', feedbackRouter);
+router.use('/users', usersRouter);
 
 export default router;

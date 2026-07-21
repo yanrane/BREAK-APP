@@ -46,7 +46,7 @@ export default function Layout() {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <div className="min-h-screen bg-cream text-ink">
+    <div className="min-h-screen bg-cream text-ink flex flex-col">
       <header className="sticky top-0 z-40 bg-cream border-b-2 border-ink">
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between gap-4">
           <Link
@@ -172,9 +172,25 @@ export default function Layout() {
         </div>
       )}
 
-      <main className="max-w-5xl mx-auto px-5 py-8">
+      <main className="max-w-5xl mx-auto px-5 py-8 w-full flex-1">
         <Outlet />
       </main>
+
+      <footer className="border-t-2 border-ink">
+        <div className="max-w-5xl mx-auto px-5 py-5 flex items-center justify-between flex-wrap gap-3 text-sm">
+          <span className="font-extrabold tracking-tight">BREAK</span>
+          <nav className="flex gap-5 font-semibold text-muted">
+            <Link to="/about" className="hover:text-ink transition-colors">
+              Tentang
+            </Link>
+            {user && (
+              <Link to="/feedback" className="hover:text-ink transition-colors">
+                Feedback
+              </Link>
+            )}
+          </nav>
+        </div>
+      </footer>
     </div>
   );
 }

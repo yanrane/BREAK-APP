@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useLeaderboard, type LeaderboardPeriod } from '../features/leaderboard/useLeaderboard';
 import { useAuthStore } from '../store/useAuthStore';
 import { cn } from '../lib/cn';
@@ -74,8 +75,9 @@ export default function Leaderboard() {
             const rankStyle = RANK_STYLE[entry.rank];
             const isMe = entry.userId === currentUserId;
             return (
-              <div
+              <Link
                 key={entry.userId}
+                to={`/u/${entry.username}`}
                 className={cn(
                   'flex items-center gap-4 px-4 py-3 transition-colors',
                   isMe ? 'bg-lime' : 'bg-cream hover:bg-cream-2',
@@ -111,7 +113,7 @@ export default function Leaderboard() {
                   {entry.points.toLocaleString('id-ID')}
                   <span className="text-xs font-bold text-muted ml-1">pts</span>
                 </span>
-              </div>
+              </Link>
             );
           })}
         </div>
