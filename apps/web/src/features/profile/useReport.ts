@@ -37,6 +37,7 @@ export interface ReportData {
     stage: PetStage;
     rarity: PetRarity;
     exp: number;
+    lastRewardLevel: number;
     hatchedAt: string | null;
     unlockedFeatures: string[];
     nextStageExp: number | null;

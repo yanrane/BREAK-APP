@@ -3,7 +3,9 @@ import prisma from '../lib/prisma';
 import { AppError } from '../lib/appError';
 import { getWIBStartOfDay } from '../lib/dateUtils';
 import { stageForExp, rollRarity } from '../lib/progression';
+import { petLevel, collectMilestones } from '../lib/petLevel';
 import { getActiveEvent } from './progressionService';
+import { checkAchievements } from './achievementService';
 import { pickDailyQuestions, wibDateKey, QUESTIONS_PER_DAY } from '../lib/quizBank';
 
 const DAILY_CAP = 20;
@@ -64,6 +66,7 @@ export async function submitScore(
   const expGained = Math.round(pointsEarned * (event?.expMultiplier ?? 1));
 
   let petData: Prisma.PetUpdateInput | null = null;
+  let coinsGained = pointsEarned;
   if (pointsEarned > 0 && user.pet) {
     const newPetExp = user.pet.exp + expGained;
     const newStage = stageForExp(newPetExp);
@@ -72,6 +75,12 @@ export async function submitScore(
       // Sama seperti misi: telur menetas → roll rarity dari EXP user saat menetas
       petData.rarity = rollRarity(user.exp + expGained);
       petData.hatchedAt = new Date();
+    }
+    // Milestone level pet (sampai lv 200): bonus coins + catat level terklaim
+    const milestone = collectMilestones(user.pet.lastRewardLevel, petLevel(newPetExp));
+    if (milestone.newLastRewardLevel > user.pet.lastRewardLevel) {
+      petData.lastRewardLevel = milestone.newLastRewardLevel;
+      coinsGained += milestone.coins;
     }
   }
 
@@ -85,12 +94,20 @@ export async function submitScore(
           data: {
             totalPoints: { increment: pointsEarned },
             exp: { increment: expGained },
-            coins: { increment: pointsEarned },
+            coins: { increment: coinsGained },
           },
         })]
       : []),
     ...(petData ? [prisma.pet.update({ where: { userId }, data: petData })] : []),
   ]);
+
+  // Achievement dicek setelah reward masuk; gagal cek tidak boleh
+  // menggagalkan submit skor
+  try {
+    await checkAchievements(userId);
+  } catch (err) {
+    console.error('[achievements] check gagal:', err);
+  }
 
   return saved;
 }

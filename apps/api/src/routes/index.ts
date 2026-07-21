@@ -10,6 +10,7 @@ import shopRouter from './shop';
 import eventsRouter from './events';
 import feedbackRouter from './feedback';
 import usersRouter from './users';
+import achievementsRouter from './achievements';
 
 const router: Router = Router();
 
@@ -24,5 +25,6 @@ router.use('/shop', shopRouter);
 router.use('/events', eventsRouter);
 router.use('/feedback', feedbackRouter);
 router.use('/users', usersRouter);
+router.use('/achievements', achievementsRouter);
 
 export default router;

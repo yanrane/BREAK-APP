@@ -18,6 +18,7 @@ import Shop from './pages/Shop';
 import About from './pages/About';
 import Feedback from './pages/Feedback';
 import PublicProfile from './pages/PublicProfile';
+import Pet from './pages/Pet';
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/feedback" element={<Feedback />} />
           <Route path="/u/:username" element={<PublicProfile />} />
+          <Route path="/pet" element={<Pet />} />
         </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { nextStreak, stageForExp, rollRarity } from '../lib/progression';
+import { petLevel, collectMilestones } from '../lib/petLevel';
 
 /** Event aktif saat ini (mis. 2x EXP), atau null. */
 export async function getActiveEvent(now: Date = new Date()) {
@@ -35,19 +36,9 @@ export async function computeMissionRewards(
 
   const multiplier = event?.expMultiplier ?? 1;
   const expGained = Math.round(basePoints * multiplier);
-  const coinsGained = basePoints;
+  let coinsGained = basePoints;
 
   const streak = nextStreak(user, now);
-
-  const userData: Prisma.UserUpdateInput = {
-    totalPoints: { increment: basePoints },
-    exp: { increment: expGained },
-    coins: { increment: coinsGained },
-    currentStreak: streak.currentStreak,
-    longestStreak: streak.longestStreak,
-    lastBrokenStreak: streak.lastBrokenStreak,
-    lastMissionDate: now,
-  };
 
   let petData: Prisma.PetUpdateInput | null = null;
   if (user.pet) {
@@ -60,7 +51,23 @@ export async function computeMissionRewards(
       petData.hatchedAt = now;
       petData.name = 'Baby Pet';
     }
+    // Milestone level pet (sampai lv 200): bonus coins + catat level terklaim
+    const milestone = collectMilestones(user.pet.lastRewardLevel, petLevel(newPetExp));
+    if (milestone.newLastRewardLevel > user.pet.lastRewardLevel) {
+      petData.lastRewardLevel = milestone.newLastRewardLevel;
+      coinsGained += milestone.coins;
+    }
   }
+
+  const userData: Prisma.UserUpdateInput = {
+    totalPoints: { increment: basePoints },
+    exp: { increment: expGained },
+    coins: { increment: coinsGained },
+    currentStreak: streak.currentStreak,
+    longestStreak: streak.longestStreak,
+    lastBrokenStreak: streak.lastBrokenStreak,
+    lastMissionDate: now,
+  };
 
   return { expGained, coinsGained, eventTitle: event?.title ?? null, userData, petData };
 }

@@ -2,6 +2,7 @@ import prisma from '../lib/prisma';
 import { AppError } from '../lib/appError';
 import { getWIBStartOfDay } from '../lib/dateUtils';
 import { computeMissionRewards } from './progressionService';
+import { checkAchievements } from './achievementService';
 import { assertCompletable, assertStartWindowOpen } from '../lib/missionGuard';
 
 /** Returns missions assigned to the user today (since WIB midnight). */
@@ -156,6 +157,14 @@ export async function completeMission(
         ? [prisma.pet.update({ where: { userId }, data: rewards.petData })]
         : []),
     ]);
+    // Achievement dicek setelah reward masuk; gagal cek tidak boleh
+    // menggagalkan complete misi
+    try {
+      await checkAchievements(userId);
+    } catch (achErr) {
+      console.error('[achievements] check gagal:', achErr);
+    }
+
     return {
       ...updated,
       rewards: {

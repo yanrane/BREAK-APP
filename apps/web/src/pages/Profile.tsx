@@ -1,29 +1,26 @@
 import { Link } from 'react-router-dom';
 import { useReport, petEmoji, RARITY_STYLES, STAGE_LABELS } from '../features/profile/useReport';
-import { computeBadges } from '../features/profile/badges';
+import { useAchievements } from '../features/profile/useAchievements';
 import { cn } from '../lib/cn';
 
 const cardClass = 'border-2 border-ink p-5 shadow-hard bg-cream';
 
 export default function Profile() {
   const { data, loading, error } = useReport();
+  const { achievements, loading: achievementsLoading } = useAchievements();
 
   if (loading) return <p className="text-muted font-semibold">Memuat profil...</p>;
   if (error || !data) return <p className="text-coral font-semibold">{error ?? 'Terjadi kesalahan'}</p>;
 
-  const { user, pet, globalRank, missionsCompleted, ownedItems, activeEvent } = data;
+  const { user, pet, globalRank, ownedItems, activeEvent } = data;
   const joined = new Date(user.joinedAt).toLocaleDateString('id-ID', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
 
-  const badges = computeBadges({
-    missionsCompleted,
-    longestStreak: user.longestStreak,
-    petHatched: Boolean(pet?.hatchedAt),
-    globalRank,
-  });
+  const unlocked = achievements.filter((a) => a.unlockedAt);
+  const locked = achievements.filter((a) => !a.unlockedAt);
 
   return (
     <div className="space-y-6">
@@ -72,7 +69,14 @@ export default function Profile() {
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div className={cardClass}>
-          <p className="text-xs font-extrabold uppercase tracking-widest text-muted mb-3">Pet Kamu</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-extrabold uppercase tracking-widest text-muted">Pet Kamu</p>
+            {pet && (
+              <Link to="/pet" className="text-xs font-extrabold underline decoration-lime decoration-2">
+                Kelola Pet →
+              </Link>
+            )}
+          </div>
           {pet ? (
             <div className="flex items-center gap-4">
               <span className="text-6xl">{petEmoji(pet.stage, user.gender)}</span>
@@ -137,19 +141,45 @@ export default function Profile() {
 
       <div className={cardClass}>
         <p className="text-xs font-extrabold uppercase tracking-widest text-muted mb-3">
-          Badge & Achievement
+          Achievement ({unlocked.length}/{achievements.length})
         </p>
-        {badges.length > 0 ? (
-          <div className="flex flex-wrap gap-3">
-            {badges.map(({ emoji, label }) => (
-              <div key={label} className="flex items-center gap-2 px-3 py-2 border-2 border-ink bg-lime-100">
-                <span className="text-xl">{emoji}</span>
-                <span className="text-xs font-extrabold">{label}</span>
+        {achievementsLoading && <div className="h-16 border-2 border-ink/20 bg-cream-2 animate-pulse" />}
+        {!achievementsLoading && (
+          <div className="space-y-4">
+            {unlocked.length > 0 ? (
+              <div className="flex flex-wrap gap-3">
+                {unlocked.map(({ code, emoji, title, coins }) => (
+                  <div
+                    key={code}
+                    className="flex items-center gap-2 px-3 py-2 border-2 border-ink bg-lime-100"
+                    title={`+${coins} coins`}
+                  >
+                    <span className="text-xl">{emoji}</span>
+                    <span className="text-xs font-extrabold">{title}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <p className="text-sm text-muted font-semibold">
+                Selesaikan misi untuk membuka achievement pertamamu!
+              </p>
+            )}
+            {locked.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {locked.map(({ code, emoji, title, description, coins }) => (
+                  <div
+                    key={code}
+                    className="flex items-center gap-2 px-3 py-1.5 border-2 border-ink/30 bg-cream-2 opacity-60"
+                    title={`${description} — hadiah ${coins} coins`}
+                  >
+                    <span className="text-base grayscale">{emoji}</span>
+                    <span className="text-xs font-bold">{title}</span>
+                    <span className="text-xs font-semibold text-muted">🪙{coins}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        ) : (
-          <p className="text-sm text-muted font-semibold">Selesaikan misi untuk membuka badge pertamamu!</p>
         )}
       </div>
     </div>
