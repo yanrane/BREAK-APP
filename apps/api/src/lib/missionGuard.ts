@@ -1,15 +1,15 @@
 import { AppError } from './appError';
 
-export type ProofTypeValue = 'PHOTO' | 'TIMER' | 'PHOTO_AND_TIMER';
+export type ProofTypeValue = 'PHOTO' | 'TIMER' | 'PHOTO_AND_TIMER' | 'GPS';
 export type MissionStatusValue =
   | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'VERIFIED' | 'REJECTED';
 
 export function needsPhoto(proofType: ProofTypeValue): boolean {
-  return proofType !== 'TIMER';
+  return proofType === 'PHOTO' || proofType === 'PHOTO_AND_TIMER';
 }
 
 export function needsTimer(proofType: ProofTypeValue): boolean {
-  return proofType !== 'PHOTO';
+  return proofType === 'TIMER' || proofType === 'PHOTO_AND_TIMER';
 }
 
 /** Jendela jam mulai misi (jam lokal user): buka 04:00, tutup 19:00. */

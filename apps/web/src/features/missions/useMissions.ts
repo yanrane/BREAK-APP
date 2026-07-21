@@ -9,8 +9,16 @@ export interface Mission {
   category: 'PHYSICAL' | 'MENTAL' | 'SOCIAL' | 'CREATIVE';
   points: number;
   requiresProof: boolean;
-  proofType: 'PHOTO' | 'TIMER' | 'PHOTO_AND_TIMER';
+  proofType: 'PHOTO' | 'TIMER' | 'PHOTO_AND_TIMER' | 'GPS';
   durationMinutes: number | null;
+  distanceMeters: number | null;
+}
+
+export interface GpsPoint {
+  lat: number;
+  lng: number;
+  t: number;
+  acc?: number;
 }
 
 export interface UserMission {
@@ -18,6 +26,7 @@ export interface UserMission {
   missionId: string;
   status: 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'VERIFIED' | 'REJECTED';
   proofUrl: string | null;
+  gpsDistanceM: number | null;
   pointsEarned: number;
   assignedAt: string;
   startedAt: string | null;
@@ -92,7 +101,25 @@ export function useTodayMissions() {
     return res.data.data;
   };
 
-  return { missions, loading, error, startMission, cancelMission, completeMission, refetch: fetchMissions };
+  const completeGpsMission = async (userMissionId: string, points: GpsPoint[]): Promise<UserMission> => {
+    const res = await api.post<{ success: true; data: UserMission }>(
+      `/missions/${userMissionId}/complete-gps`,
+      { points },
+    );
+    setMissions((prev) => prev.map((m) => (m.id === userMissionId ? res.data.data : m)));
+    return res.data.data;
+  };
+
+  return {
+    missions,
+    loading,
+    error,
+    startMission,
+    cancelMission,
+    completeMission,
+    completeGpsMission,
+    refetch: fetchMissions,
+  };
 }
 
 export function useMissionHistory(page: number, limit = 20) {

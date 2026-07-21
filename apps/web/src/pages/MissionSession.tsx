@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTodayMissions } from '../features/missions/useMissions';
 import CameraCapture from '../features/missions/CameraCapture';
+import GpsMissionSession from '../features/missions/GpsMissionSession';
 import api from '../lib/api';
 
 type Phase = 'ready' | 'countdown' | 'capture' | 'done';
@@ -15,7 +16,8 @@ function formatTime(totalSeconds: number): string {
 export default function MissionSession() {
   const { userMissionId } = useParams<{ userMissionId: string }>();
   const navigate = useNavigate();
-  const { missions, loading, startMission, cancelMission, completeMission } = useTodayMissions();
+  const { missions, loading, startMission, cancelMission, completeMission, completeGpsMission } =
+    useTodayMissions();
 
   const containerRef = useRef<HTMLDivElement>(null);
   // endAtMs dihitung dari startedAt + serverNow (jam server) — jam device hanya untuk delta tampilan
@@ -175,6 +177,26 @@ export default function MissionSession() {
         <button onClick={() => navigate('/missions')} className="text-sm font-extrabold underline decoration-2">
           ← Kembali ke Misi Harian
         </button>
+      </div>
+    );
+  }
+
+  // Misi GPS punya alur sendiri (tracking jarak, tanpa fullscreen/timer/foto)
+  if (mission.proofType === 'GPS') {
+    return (
+      <div className="max-w-xl">
+        <div className="border-b-2 border-ink pb-4 mb-6">
+          <p className="text-label mb-1">Sesi Misi</p>
+          <h1 className="text-3xl font-extrabold leading-tight">{mission.title}</h1>
+          <p className="text-sm text-muted font-medium mt-1">{mission.description}</p>
+        </div>
+        <GpsMissionSession
+          userMission={userMission}
+          mission={mission}
+          startMission={startMission}
+          cancelMission={cancelMission}
+          completeGpsMission={completeGpsMission}
+        />
       </div>
     );
   }

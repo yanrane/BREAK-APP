@@ -128,6 +128,7 @@ model Mission {
   isActive        Boolean         @default(true)
   proofType       ProofType       @default(PHOTO)
   durationMinutes Int?
+  distanceMeters  Int?
 
   userMissions    UserMission[]
 }
@@ -141,6 +142,7 @@ model UserMission {
   proofHash    String?       @unique
   pointsEarned Int           @default(0)
   exitAttempts Int           @default(0)
+  gpsDistanceM Int?
   assignedAt   DateTime      @default(now())
   startedAt    DateTime?
   completedAt  DateTime?
@@ -194,6 +196,7 @@ enum ProofType {
   PHOTO
   TIMER
   PHOTO_AND_TIMER
+  GPS
 }
 
 enum GameType {

@@ -1,16 +1,35 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import path from 'path';
 import { promises as fsp } from 'fs';
+import { z } from 'zod';
 import { requireAuth } from '../middleware/requireAuth';
 import { uploadProofMiddleware } from '../middleware/uploadProof';
+import { AppError } from '../lib/appError';
 import {
   getTodayMissions,
   startMission,
   cancelMission,
   completeMission,
+  completeGpsMission,
   getMissionHistory,
   recordExitAttempt,
 } from '../services/missionService';
+
+// Maks 1500 titik ≈ 80KB JSON — muat di limit body parser, cukup untuk
+// sesi ±1 jam dengan throttle 2.5 detik di client
+const completeGpsSchema = z.object({
+  points: z
+    .array(
+      z.object({
+        lat: z.number(),
+        lng: z.number(),
+        t: z.number(),
+        acc: z.number().optional(),
+      }),
+    )
+    .min(2, 'Track GPS terlalu pendek')
+    .max(1500, 'Track GPS terlalu panjang'),
+});
 
 const router: Router = Router();
 
@@ -45,6 +64,21 @@ router.post('/:userMissionId/start', requireAuth, async (req: Request, res: Resp
       typeof req.body?.timezone === 'string' ? req.body.timezone.slice(0, 64) : undefined;
     const result = await startMission(req.user!.id, req.params.userMissionId, timezone);
     res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/missions/:userMissionId/complete-gps — selesaikan misi GPS
+// (jarak dihitung ulang server dari titik mentah)
+router.post('/:userMissionId/complete-gps', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  const result = completeGpsSchema.safeParse(req.body);
+  if (!result.success) {
+    return next(new AppError(400, 'VALIDATION_ERROR', result.error.errors[0]?.message ?? 'Input tidak valid'));
+  }
+  try {
+    const updated = await completeGpsMission(req.user!.id, req.params.userMissionId, result.data.points);
+    res.json({ success: true, data: updated });
   } catch (err) {
     next(err);
   }

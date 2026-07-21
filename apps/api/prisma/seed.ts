@@ -3,6 +3,18 @@ import prisma from '../src/lib/prisma';
 
 const missions = [
   {
+    slug: 'walk-run-1km',
+    title: 'Jalan atau lari 1 km',
+    description:
+      'Keluar rumah dan tempuh 1 km — jalan santai, jalan cepat, atau lari. Jarak dilacak GPS langsung dari HP kamu; biarkan halaman tetap terbuka selama bergerak.',
+    category: 'PHYSICAL' as const,
+    points: 25,
+    requiresProof: true,
+    cooldownHours: 24,
+    proofType: 'GPS' as const,
+    distanceMeters: 1000,
+  },
+  {
     slug: 'jogging-15min',
     title: 'Jogging minimal 15 menit',
     description: 'Lari atau jalan cepat di luar ruangan minimal 15 menit. Setelah timer selesai, jepret foto suasana larimu langsung dari kamera.',

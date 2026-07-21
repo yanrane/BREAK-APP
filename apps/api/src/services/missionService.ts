@@ -4,6 +4,7 @@ import { getWIBStartOfDay } from '../lib/dateUtils';
 import { computeMissionRewards } from './progressionService';
 import { checkAchievements } from './achievementService';
 import { assertCompletable, assertStartWindowOpen } from '../lib/missionGuard';
+import { measureTrack, MAX_AVG_SPEED, type GpsPoint } from '../lib/gpsTrack';
 
 /** Returns missions assigned to the user today (since WIB midnight). */
 export async function getTodayMissions(userId: string) {
@@ -123,6 +124,12 @@ export async function completeMission(
     throw new AppError(404, 'MISSION_NOT_FOUND', 'Misi tidak ditemukan');
   }
 
+  // Misi GPS wajib lewat complete-gps — tanpa ini, endpoint complete biasa
+  // bisa dipakai bypass validasi jarak
+  if (userMission.mission.proofType === 'GPS') {
+    throw new AppError(400, 'USE_GPS_ENDPOINT', 'Misi GPS diselesaikan lewat pelacakan jarak');
+  }
+
   const now = new Date();
   assertCompletable({
     status: userMission.status,
@@ -179,6 +186,94 @@ export async function completeMission(
       throw new AppError(400, 'PROOF_DUPLICATE', 'Foto ini sudah pernah dipakai sebagai bukti misi');
     }
     if (prismaErr?.code === 'P2025') {
+      throw new AppError(409, 'MISSION_ALREADY_COMPLETED', 'Misi sudah diselesaikan');
+    }
+    throw err;
+  }
+}
+
+/**
+ * Selesaikan misi GPS. Jarak SELALU dihitung ulang server dari titik mentah
+ * (filter akurasi + kecepatan di measureTrack); durasi dicek terhadap
+ * startedAt versi jam server supaya track instan/spoof sederhana tertolak.
+ */
+export async function completeGpsMission(
+  userId: string,
+  userMissionId: string,
+  points: GpsPoint[],
+) {
+  const userMission = await prisma.userMission.findUnique({
+    where: { id: userMissionId },
+    include: { mission: true },
+  });
+  if (!userMission || userMission.userId !== userId) {
+    throw new AppError(404, 'MISSION_NOT_FOUND', 'Misi tidak ditemukan');
+  }
+  if (userMission.mission.proofType !== 'GPS' || !userMission.mission.distanceMeters) {
+    throw new AppError(400, 'NOT_GPS_MISSION', 'Misi ini tidak memakai pelacakan GPS');
+  }
+  if (userMission.status === 'ASSIGNED') {
+    throw new AppError(400, 'MISSION_NOT_STARTED', 'Tekan Start Mission dulu sebelum menyelesaikan misi');
+  }
+  if (userMission.status !== 'IN_PROGRESS' || !userMission.startedAt) {
+    throw new AppError(409, 'MISSION_ALREADY_COMPLETED', 'Misi sudah diselesaikan');
+  }
+
+  const now = new Date();
+  const target = userMission.mission.distanceMeters;
+  const track = measureTrack(points);
+
+  // Toleransi 2% untuk pembulatan/filter GPS di sisi client
+  if (track.distanceM < target * 0.98) {
+    throw new AppError(
+      400,
+      'GPS_TARGET_NOT_REACHED',
+      `Jarak valid baru ${track.distanceM} m dari target ${target} m`,
+    );
+  }
+  const serverElapsedSec = (now.getTime() - userMission.startedAt.getTime()) / 1000;
+  if (serverElapsedSec < target / MAX_AVG_SPEED) {
+    throw new AppError(
+      400,
+      'GPS_TOO_FAST',
+      'Sesi terlalu singkat untuk jarak segitu — tempuh jaraknya beneran ya',
+    );
+  }
+
+  const rewards = await computeMissionRewards(userId, userMission.mission.points, now);
+  try {
+    const [updated] = await prisma.$transaction([
+      prisma.userMission.update({
+        where: { id: userMissionId, status: 'IN_PROGRESS' },
+        data: {
+          status: 'VERIFIED',
+          gpsDistanceM: track.distanceM,
+          completedAt: now,
+          verifiedAt: now,
+          pointsEarned: userMission.mission.points,
+        },
+        include: { mission: true },
+      }),
+      prisma.user.update({ where: { id: userId }, data: rewards.userData }),
+      ...(rewards.petData ? [prisma.pet.update({ where: { userId }, data: rewards.petData })] : []),
+    ]);
+
+    try {
+      await checkAchievements(userId);
+    } catch (achErr) {
+      console.error('[achievements] check gagal:', achErr);
+    }
+
+    return {
+      ...updated,
+      rewards: {
+        expGained: rewards.expGained,
+        coinsGained: rewards.coinsGained,
+        eventTitle: rewards.eventTitle,
+      },
+    };
+  } catch (err: unknown) {
+    if ((err as { code?: string })?.code === 'P2025') {
       throw new AppError(409, 'MISSION_ALREADY_COMPLETED', 'Misi sudah diselesaikan');
     }
     throw err;

@@ -63,6 +63,14 @@ export default function MissionCard({ userMission, apiBaseUrl = '', onStart }: M
           <p className="text-sm text-muted font-medium mt-1 leading-relaxed">{mission.description}</p>
         </div>
 
+        {isVerified && userMission.gpsDistanceM !== null && (
+          <div className="flex items-center gap-2 text-ink text-xs font-extrabold">
+            <span className="bg-ink text-lime px-1.5 py-0.5">✓ SELESAI</span>
+            <span>📍 {(userMission.gpsDistanceM / 1000).toFixed(2)} km via GPS</span>
+            <span>+{userMission.pointsEarned} poin</span>
+          </div>
+        )}
+
         {isVerified && proofUrl && (
           <div className="space-y-2">
             <img
