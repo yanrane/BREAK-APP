@@ -1,6 +1,10 @@
-import { GameType } from '@prisma/client';
+import { GameType, Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
+import { AppError } from '../lib/appError';
 import { getWIBStartOfDay } from '../lib/dateUtils';
+import { stageForExp, rollRarity } from '../lib/progression';
+import { getActiveEvent } from './progressionService';
+import { pickDailyQuestions, wibDateKey, QUESTIONS_PER_DAY } from '../lib/quizBank';
 
 const DAILY_CAP = 20;
 
@@ -44,12 +48,32 @@ export async function submitScore(
   const candidate = calculateGamePoints(clamped);
 
   const todayStart = getWIBStartOfDay();
-  const aggregates = await prisma.gameScore.aggregate({
-    where: { userId, playedAt: { gte: todayStart } },
-    _sum: { pointsEarned: true },
-  });
+  const [aggregates, user, event] = await Promise.all([
+    prisma.gameScore.aggregate({
+      where: { userId, playedAt: { gte: todayStart } },
+      _sum: { pointsEarned: true },
+    }),
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, include: { pet: true } }),
+    getActiveEvent(),
+  ]);
   const accumulated = aggregates._sum.pointsEarned ?? 0;
   const pointsEarned = applyDailyCap(accumulated, candidate);
+
+  // Reward game selaras dengan misi: EXP kena multiplier event, coins = poin,
+  // pet ikut tumbuh — tapi TANPA menyentuh streak (streak khusus misi)
+  const expGained = Math.round(pointsEarned * (event?.expMultiplier ?? 1));
+
+  let petData: Prisma.PetUpdateInput | null = null;
+  if (pointsEarned > 0 && user.pet) {
+    const newPetExp = user.pet.exp + expGained;
+    const newStage = stageForExp(newPetExp);
+    petData = { exp: newPetExp, stage: newStage };
+    if (user.pet.stage === 'EGG' && newStage !== 'EGG') {
+      // Sama seperti misi: telur menetas → roll rarity dari EXP user saat menetas
+      petData.rarity = rollRarity(user.exp + expGained);
+      petData.hatchedAt = new Date();
+    }
+  }
 
   const [saved] = await prisma.$transaction([
     prisma.gameScore.create({
@@ -58,12 +82,61 @@ export async function submitScore(
     ...(pointsEarned > 0
       ? [prisma.user.update({
           where: { id: userId },
-          data: { totalPoints: { increment: pointsEarned } },
+          data: {
+            totalPoints: { increment: pointsEarned },
+            exp: { increment: expGained },
+            coins: { increment: pointsEarned },
+          },
         })]
       : []),
+    ...(petData ? [prisma.pet.update({ where: { userId }, data: petData })] : []),
   ]);
 
   return saved;
+}
+
+/** Kuis hari ini (soal tanpa kunci jawaban) + status sudah main atau belum. */
+export async function getDailyQuiz(userId: string) {
+  const dateKey = wibDateKey();
+  const questions = pickDailyQuestions(dateKey);
+  const played = await prisma.gameScore.findFirst({
+    where: { userId, gameType: 'QUIZ', playedAt: { gte: getWIBStartOfDay() } },
+    orderBy: { playedAt: 'desc' },
+  });
+  return {
+    dateKey,
+    alreadyPlayed: Boolean(played),
+    lastScore: played?.score ?? null,
+    questions: questions.map(({ id, topic, question, options }) => ({ id, topic, question, options })),
+  };
+}
+
+/** Nilai jawaban kuis harian di server; sekali per hari per user. */
+export async function submitQuiz(userId: string, answers: number[]) {
+  const questions = pickDailyQuestions(wibDateKey());
+  if (answers.length !== questions.length) {
+    throw new AppError(400, 'VALIDATION_ERROR', `Jawaban harus ${questions.length} soal`);
+  }
+
+  // ponytail: guard find-then-create tanpa unique constraint — double-submit
+  // super cepat bisa lolos; tambah constraint kalau kelak jadi masalah nyata
+  const played = await prisma.gameScore.findFirst({
+    where: { userId, gameType: 'QUIZ', playedAt: { gte: getWIBStartOfDay() } },
+  });
+  if (played) {
+    throw new AppError(409, 'QUIZ_ALREADY_PLAYED', 'Kuis hari ini sudah dikerjakan. Balik lagi besok!');
+  }
+
+  const results = questions.map((q, i) => ({
+    id: q.id,
+    correctIndex: q.correctIndex,
+    isCorrect: answers[i] === q.correctIndex,
+  }));
+  const correctCount = results.filter((r) => r.isCorrect).length;
+  const score = Math.round((correctCount / questions.length) * 1000);
+  const saved = await submitScore(userId, 'QUIZ', score);
+
+  return { correctCount, total: questions.length, results, saved };
 }
 
 export async function getMyStats(userId: string) {

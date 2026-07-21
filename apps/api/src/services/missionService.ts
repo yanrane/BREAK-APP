@@ -62,6 +62,19 @@ export async function startMission(userId: string, userMissionId: string, timezo
   }
 }
 
+/** Catat percobaan keluar dari Focus Mode selama sesi berjalan (analitik). */
+export async function recordExitAttempt(userId: string, userMissionId: string) {
+  const userMission = await prisma.userMission.findUnique({ where: { id: userMissionId } });
+  if (!userMission || userMission.userId !== userId) {
+    throw new AppError(404, 'MISSION_NOT_FOUND', 'Misi tidak ditemukan');
+  }
+  if (userMission.status !== 'IN_PROGRESS') return userMission; // sesi selesai — abaikan
+  return prisma.userMission.update({
+    where: { id: userMissionId },
+    data: { exitAttempts: { increment: 1 } },
+  });
+}
+
 /** Batalkan sesi misi: kembali ke ASSIGNED, startedAt dihapus (bisa dicoba ulang). */
 export async function cancelMission(userId: string, userMissionId: string) {
   const userMission = await prisma.userMission.findUnique({

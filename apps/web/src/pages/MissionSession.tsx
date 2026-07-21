@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTodayMissions } from '../features/missions/useMissions';
 import CameraCapture from '../features/missions/CameraCapture';
+import api from '../lib/api';
 
 type Phase = 'ready' | 'countdown' | 'capture' | 'done';
 
@@ -49,13 +50,20 @@ export default function MissionSession() {
     const onLeave = () => {
       if (document.hidden || !document.fullscreenElement) setPaused(true);
     };
-    document.addEventListener('visibilitychange', onLeave);
+    const onVisibility = () => {
+      // Pindah tab / minimize dicatat untuk analitik — fire and forget
+      if (document.hidden && userMissionId) {
+        api.post(`/missions/${userMissionId}/exit`).catch(() => {});
+      }
+      onLeave();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
     document.addEventListener('fullscreenchange', onLeave);
     return () => {
-      document.removeEventListener('visibilitychange', onLeave);
+      document.removeEventListener('visibilitychange', onVisibility);
       document.removeEventListener('fullscreenchange', onLeave);
     };
-  }, [phase]);
+  }, [phase, userMissionId]);
 
   // Anti-exit ringan selama sesi berjalan
   useEffect(() => {

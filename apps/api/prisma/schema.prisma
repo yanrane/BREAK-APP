@@ -127,6 +127,7 @@ model UserMission {
   proofUrl     String?
   proofHash    String?       @unique
   pointsEarned Int           @default(0)
+  exitAttempts Int           @default(0)
   assignedAt   DateTime      @default(now())
   startedAt    DateTime?
   completedAt  DateTime?
@@ -186,6 +187,10 @@ enum GameType {
   REACTION
   FAST_CLICK
   PATTERN_MATCH
+  SUDOKU
+  MEMORY
+  MATH_SPRINT
+  QUIZ
 }
 
 enum Gender {

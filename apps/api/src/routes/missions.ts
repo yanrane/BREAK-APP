@@ -9,6 +9,7 @@ import {
   cancelMission,
   completeMission,
   getMissionHistory,
+  recordExitAttempt,
 } from '../services/missionService';
 
 const router: Router = Router();
@@ -44,6 +45,16 @@ router.post('/:userMissionId/start', requireAuth, async (req: Request, res: Resp
       typeof req.body?.timezone === 'string' ? req.body.timezone.slice(0, 64) : undefined;
     const result = await startMission(req.user!.id, req.params.userMissionId, timezone);
     res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/missions/:userMissionId/exit — catat percobaan keluar Focus Mode
+router.post('/:userMissionId/exit', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const updated = await recordExitAttempt(req.user!.id, req.params.userMissionId);
+    res.json({ success: true, data: { exitAttempts: updated.exitAttempts } });
   } catch (err) {
     next(err);
   }
