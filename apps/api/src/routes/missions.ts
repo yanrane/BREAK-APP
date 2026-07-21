@@ -38,7 +38,11 @@ router.get('/history', requireAuth, async (req: Request, res: Response, next: Ne
 // POST /api/v1/missions/:userMissionId/start — mulai sesi (startedAt = jam server)
 router.post('/:userMissionId/start', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await startMission(req.user!.id, req.params.userMissionId);
+    // Timezone IANA dari client untuk jendela jam mulai; string bebas dibatasi 64 char,
+    // nilai tidak valid jatuh ke WIB di dalam guard
+    const timezone =
+      typeof req.body?.timezone === 'string' ? req.body.timezone.slice(0, 64) : undefined;
+    const result = await startMission(req.user!.id, req.params.userMissionId, timezone);
     res.json({ success: true, data: result });
   } catch (err) {
     next(err);

@@ -90,8 +90,18 @@ export default function MissionSession() {
       } else {
         setPhase('capture');
       }
-    } catch {
-      setSubmitError('Gagal memulai misi. Coba lagi.');
+    } catch (err: unknown) {
+      const apiErr = (err as { response?: { data?: { error?: { code?: string; message?: string } } } })
+        ?.response?.data?.error;
+      // Pesan jendela jam mulai dari server lebih informatif dari pesan generik
+      if (
+        (apiErr?.code === 'MISSION_START_NOT_OPEN' || apiErr?.code === 'MISSION_START_CLOSED') &&
+        apiErr.message
+      ) {
+        setSubmitError(apiErr.message);
+      } else {
+        setSubmitError('Gagal memulai misi. Coba lagi.');
+      }
     }
   };
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { AppError } from './appError';
-import { needsPhoto, needsTimer, remainingSeconds, assertCompletable } from './missionGuard';
+import { needsPhoto, needsTimer, remainingSeconds, assertCompletable, assertStartWindowOpen } from './missionGuard';
 
 const NOW = new Date('2026-07-12T10:00:00Z');
 
@@ -80,5 +80,50 @@ describe('assertCompletable', () => {
     expect(() => assertCompletable({
       ...base, proofType: 'PHOTO', durationMinutes: null, startedAt: null,
     })).toThrow(expect.objectContaining({ code: 'MISSION_NOT_STARTED' }));
+  });
+});
+
+describe('assertStartWindowOpen', () => {
+  // 2026-07-21T12:00:00Z = 19:00 WIB (UTC+7)
+  it('menolak start pukul 19:00 waktu lokal (CLOSED)', () => {
+    expect(() =>
+      assertStartWindowOpen(new Date('2026-07-21T12:00:00Z'), 'Asia/Jakarta'),
+    ).toThrowError(expect.objectContaining({ code: 'MISSION_START_CLOSED' }));
+  });
+
+  it('mengizinkan start pukul 18:59 waktu lokal', () => {
+    expect(() =>
+      assertStartWindowOpen(new Date('2026-07-21T11:59:00Z'), 'Asia/Jakarta'),
+    ).not.toThrow();
+  });
+
+  // 2026-07-21T20:30:00Z = 03:30 WIB besoknya
+  it('menolak start pukul 03:30 waktu lokal (NOT_OPEN)', () => {
+    expect(() =>
+      assertStartWindowOpen(new Date('2026-07-21T20:30:00Z'), 'Asia/Jakarta'),
+    ).toThrowError(expect.objectContaining({ code: 'MISSION_START_NOT_OPEN' }));
+  });
+
+  it('mengizinkan start tepat pukul 04:00 waktu lokal', () => {
+    expect(() =>
+      assertStartWindowOpen(new Date('2026-07-21T21:00:00Z'), 'Asia/Jakarta'),
+    ).not.toThrow();
+  });
+
+  it('menghormati timezone user, bukan WIB (New York UTC-4 saat DST)', () => {
+    // 14:00Z = 10:00 New York (boleh) tapi 21:00 WIB (tutup)
+    expect(() =>
+      assertStartWindowOpen(new Date('2026-07-21T14:00:00Z'), 'America/New_York'),
+    ).not.toThrow();
+  });
+
+  it('timezone tidak valid jatuh ke WIB', () => {
+    expect(() =>
+      assertStartWindowOpen(new Date('2026-07-21T12:00:00Z'), 'Not/AZone'),
+    ).toThrowError(expect.objectContaining({ code: 'MISSION_START_CLOSED' }));
+  });
+
+  it('timezone kosong jatuh ke WIB', () => {
+    expect(() => assertStartWindowOpen(new Date('2026-07-21T02:00:00Z'))).not.toThrow(); // 09:00 WIB
   });
 });

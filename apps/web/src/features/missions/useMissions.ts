@@ -55,6 +55,8 @@ export function useTodayMissions() {
   const startMission = async (userMissionId: string) => {
     const res = await api.post<{ success: true; data: { userMission: UserMission; serverNow: string } }>(
       `/missions/${userMissionId}/start`,
+      // Timezone IANA device untuk validasi jendela jam mulai di server
+      { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone },
     );
     const { userMission, serverNow } = res.data.data;
     setMissions((prev) => prev.map((m) => (m.id === userMissionId ? userMission : m)));

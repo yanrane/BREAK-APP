@@ -2,7 +2,7 @@ import prisma from '../lib/prisma';
 import { AppError } from '../lib/appError';
 import { getWIBStartOfDay } from '../lib/dateUtils';
 import { computeMissionRewards } from './progressionService';
-import { assertCompletable } from '../lib/missionGuard';
+import { assertCompletable, assertStartWindowOpen } from '../lib/missionGuard';
 
 /** Returns missions assigned to the user today (since WIB midnight). */
 export async function getTodayMissions(userId: string) {
@@ -24,8 +24,10 @@ export async function getTodayMissions(userId: string) {
  * Mulai sesi misi: catat startedAt dari jam server, status IN_PROGRESS.
  * Idempoten — kalau sudah IN_PROGRESS, kembalikan sesi berjalan (resume).
  * serverNow dikirim agar client bisa kalibrasi countdown tanpa percaya jam device.
+ * timezone (IANA, dari client) hanya dipakai untuk jendela jam mulai — start baru
+ * ditolak di luar 04:00–19:00 waktu lokal user; resume tidak terpengaruh.
  */
-export async function startMission(userId: string, userMissionId: string) {
+export async function startMission(userId: string, userMissionId: string, timezone?: string) {
   const userMission = await prisma.userMission.findUnique({
     where: { id: userMissionId },
     include: { mission: true },
@@ -41,6 +43,8 @@ export async function startMission(userId: string, userMissionId: string) {
   if (userMission.status !== 'ASSIGNED') {
     throw new AppError(409, 'MISSION_ALREADY_COMPLETED', 'Misi sudah diselesaikan');
   }
+
+  assertStartWindowOpen(new Date(), timezone);
 
   try {
     const updated = await prisma.userMission.update({
