@@ -28,6 +28,27 @@
   }
 }
 
+@layer base {
+  /* Redesign soft-neubrutalism: sudut membulat lembut di kartu & kontrol,
+     border tebal + hard shadow tetap jadi identitas */
+  [class*='shadow-hard'] {
+    border-radius: 0.875rem;
+    overflow: hidden;
+  }
+  button,
+  input,
+  select,
+  textarea,
+  img {
+    border-radius: 0.75rem;
+  }
+  /* Papan sudoku tetap siku — sel membulat bikin grid terlihat pecah */
+  .grid-cols-9,
+  .grid-cols-9 button {
+    border-radius: 0 !important;
+  }
+}
+
 @layer utilities {
   .text-label {
     font-size: 0.75rem;
@@ -35,5 +56,34 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--muted);
+  }
+
+  @keyframes confettiFall {
+    from {
+      transform: translateY(-5vh) rotate(0deg);
+      opacity: 1;
+    }
+    to {
+      transform: translateY(108vh) rotate(560deg);
+      opacity: 0.85;
+    }
+  }
+  .animate-confetti {
+    animation-name: confettiFall;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+
+  @keyframes warnPulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+  }
+  .animate-warn {
+    animation: warnPulse 1.6s ease-in-out infinite;
   }
 }

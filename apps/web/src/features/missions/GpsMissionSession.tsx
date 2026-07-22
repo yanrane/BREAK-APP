@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../lib/cn';
+import Confetti from '../../components/Confetti';
 import type { GpsPoint, Mission, UserMission } from './useMissions';
 
 // Mirror filter server (apps/api/src/lib/gpsTrack.ts) supaya angka di layar
@@ -192,6 +193,7 @@ export default function GpsMissionSession({
   if (done) {
     return (
       <div className="border-2 border-ink p-8 shadow-hard text-center bg-lime space-y-3">
+        <Confetti />
         <p className="text-4xl">🏁</p>
         <p className="font-extrabold text-xl">Target tercapai!</p>
         <p className="font-extrabold text-3xl">{formatKm(done.gpsDistanceM ?? distanceM)} km</p>

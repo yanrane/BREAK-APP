@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTodayMissions } from '../features/missions/useMissions';
 import CameraCapture from '../features/missions/CameraCapture';
 import GpsMissionSession from '../features/missions/GpsMissionSession';
+import Confetti from '../components/Confetti';
 import api from '../lib/api';
 
 type Phase = 'ready' | 'countdown' | 'capture' | 'done';
@@ -172,6 +173,7 @@ export default function MissionSession() {
   if (userMission.status === 'VERIFIED' || userMission.status === 'COMPLETED') {
     return (
       <div className="border-2 border-ink p-10 shadow-hard text-center bg-lime">
+        <Confetti />
         <p className="text-4xl mb-3">✓</p>
         <p className="font-extrabold text-lg mb-2">Misi sudah selesai!</p>
         <button onClick={() => navigate('/missions')} className="text-sm font-extrabold underline decoration-2">

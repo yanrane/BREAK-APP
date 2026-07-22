@@ -3,6 +3,15 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/useAuthStore';
 import api from '../lib/api';
 import { cn } from '../lib/cn';
+import UsageGuard from './UsageGuard';
+
+const BOTTOM_NAV = [
+  { to: '/dashboard', icon: '🏠', label: 'Home' },
+  { to: '/missions', icon: '🎯', label: 'Misi' },
+  { to: '/games', icon: '🕹️', label: 'Games' },
+  { to: '/shop', icon: '🛍️', label: 'Shop' },
+  { to: '/profile', icon: '👤', label: 'Profil' },
+];
 
 const NAV_LINKS = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -172,11 +181,47 @@ export default function Layout() {
         </div>
       )}
 
-      <main className="max-w-5xl mx-auto px-5 py-8 w-full flex-1">
+      <main className="max-w-5xl mx-auto px-5 pt-8 pb-24 sm:pb-8 w-full flex-1">
         <Outlet />
       </main>
 
-      <footer className="border-t-2 border-ink">
+      {user && <UsageGuard />}
+
+      {/* FAB mulai misi (mobile) */}
+      {user && pathname !== '/missions' && (
+        <Link
+          to="/missions"
+          aria-label="Mulai misi"
+          className="sm:hidden fixed bottom-20 right-4 z-40 w-14 h-14 !rounded-full border-2 border-ink bg-lime shadow-hard flex items-center justify-center text-xl active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all duration-100"
+        >
+          ▶
+        </Link>
+      )}
+
+      {/* Bottom navigation (mobile) */}
+      {user && (
+        <nav
+          className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-cream border-t-2 border-ink flex"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          {BOTTOM_NAV.map(({ to, icon, label }) => (
+            <Link
+              key={to}
+              to={to}
+              onClick={closeMenu}
+              className={cn(
+                'flex-1 flex flex-col items-center gap-0.5 py-2 text-[10px] font-extrabold !rounded-none transition-colors',
+                pathname === to ? 'bg-ink text-cream' : 'text-muted hover:text-ink',
+              )}
+            >
+              <span className="text-lg leading-none" aria-hidden="true">{icon}</span>
+              {label}
+            </Link>
+          ))}
+        </nav>
+      )}
+
+      <footer className={cn('border-t-2 border-ink', user && 'mb-14 sm:mb-0')}>
         <div className="max-w-5xl mx-auto px-5 py-5 flex items-center justify-between flex-wrap gap-3 text-sm">
           <span className="font-extrabold tracking-tight">BREAK</span>
           <nav className="flex gap-5 font-semibold text-muted">
