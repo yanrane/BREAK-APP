@@ -1,37 +1,88 @@
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  /* Token warna sebagai triplet RGB supaya Tailwind bisa kasih alpha (bg-ink/50)
+     dan seluruh app otomatis flip saat .dark dipasang di <html> */
   :root {
-    --cream: #F8F4EC;
-    --cream-2: #EDE8DC;
-    --ink: #13120E;
-    --lime: #C2F13B;
-    --coral: #F04D25;
-    --muted: #857F6F;
+    --cream: 248 244 236;
+    --cream-2: 237 232 220;
+    --ink: 19 18 14;
+    --lime: 194 241 59;
+    --lime-100: 235 249 192;
+    --coral: 240 77 37;
+    --muted: 133 127 111;
+    --magenta: 233 53 167;
+    --aqua: 8 145 178;
+    --grape: 124 58 237;
+  }
+
+  .dark {
+    --cream: 10 11 39; /* navy pekat ala Built In */
+    --cream-2: 25 28 68; /* permukaan kartu */
+    --ink: 240 242 255; /* teks & border near-white */
+    --lime-100: 40 46 92;
+    --coral: 255 107 71;
+    --muted: 142 147 184;
+    --magenta: 255 77 196;
+    --aqua: 46 214 255;
+    --grape: 167 139 250;
   }
 
   html {
-    background-color: var(--cream);
+    background-color: rgb(var(--cream));
     scroll-behavior: smooth;
   }
 
   body {
-    font-family: 'Bricolage Grotesque', sans-serif;
-    background-color: var(--cream);
-    color: var(--ink);
+    font-family: "Bricolage Grotesque", sans-serif;
+    background-color: rgb(var(--cream));
+    color: rgb(var(--ink));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Di dark mode, permukaan aksen terang tetap butuh teks gelap —
+     termasuk anak elemen yang pakai text-ink / text-muted (dgn atau tanpa alpha) */
+  .dark
+    :is(
+      .bg-lime,
+      .bg-coral,
+      .bg-magenta,
+      .bg-aqua,
+      .bg-grape,
+      .bg-amber-100,
+      .bg-purple-100,
+      .bg-pink-100
+    ) {
+    color: #13120e;
+  }
+  .dark
+    :is(
+      .bg-lime,
+      .bg-coral,
+      .bg-magenta,
+      .bg-aqua,
+      .bg-grape,
+      .bg-amber-100,
+      .bg-purple-100,
+      .bg-pink-100
+    )
+    :is(.text-ink, [class*="text-ink/"], .text-muted, [class*="text-muted/"]) {
+    color: rgb(19 18 14 / 0.65);
+  }
+  .dark :is(.hover\:bg-lime:hover, .hover\:bg-coral:hover) {
+    color: #13120e;
   }
 }
 
 @layer base {
   /* Redesign soft-neubrutalism: sudut membulat lembut di kartu & kontrol,
      border tebal + hard shadow tetap jadi identitas */
-  [class*='shadow-hard'] {
+  [class*="shadow-hard"] {
     border-radius: 0.875rem;
     overflow: hidden;
   }
@@ -55,7 +106,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--muted);
+    color: rgb(var(--muted));
   }
 
   @keyframes confettiFall {
