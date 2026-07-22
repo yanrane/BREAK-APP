@@ -9,3 +9,6 @@ apps/api/uploads/
 *.png
 *.jpeg
 .playwright-mcp/
+
+# Claude Code local settings (berisi allowlist berisi secret lokal)
+.claude/settings.local.json
