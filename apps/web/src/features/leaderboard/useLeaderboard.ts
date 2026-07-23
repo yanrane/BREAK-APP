@@ -6,6 +6,7 @@ export interface LeaderboardEntry {
   userId: string;
   username: string;
   avatarUrl: string | null;
+  title: string | null;
   points: number;
 }
 

@@ -106,6 +106,11 @@ export default function Leaderboard() {
 
                 <span className="flex-1 font-bold text-sm truncate">
                   {entry.username}
+                  {entry.title && (
+                    <span className="ml-2 align-middle text-[10px] font-extrabold uppercase tracking-wide border-2 border-ink bg-[#FFD700] text-ink px-1.5 py-0.5">
+                      {entry.title}
+                    </span>
+                  )}
                   {isMe && <span className="ml-2 text-xs font-extrabold text-ink/50">(kamu)</span>}
                 </span>
 

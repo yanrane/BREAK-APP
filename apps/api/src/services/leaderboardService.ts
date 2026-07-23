@@ -5,6 +5,7 @@ export interface LeaderboardEntry {
   userId: string;
   username: string;
   avatarUrl: string | null;
+  title: string | null;
   points: number;
 }
 
@@ -19,13 +20,14 @@ export async function getLeaderboard(
       where: { totalPoints: { gt: 0 } },
       orderBy: { totalPoints: 'desc' },
       take: safeLimit,
-      select: { id: true, username: true, avatarUrl: true, totalPoints: true },
+      select: { id: true, username: true, avatarUrl: true, title: true, totalPoints: true },
     });
     return users.map((u, idx) => ({
       rank: idx + 1,
       userId: u.id,
       username: u.username,
       avatarUrl: u.avatarUrl,
+      title: u.title,
       points: u.totalPoints,
     }));
   }
@@ -65,7 +67,7 @@ export async function getLeaderboard(
   const userIds = sorted.map(([id]) => id);
   const users = await prisma.user.findMany({
     where: { id: { in: userIds } },
-    select: { id: true, username: true, avatarUrl: true },
+    select: { id: true, username: true, avatarUrl: true, title: true },
   });
   const userMap = new Map(users.map((u) => [u.id, u]));
 
@@ -73,7 +75,14 @@ export async function getLeaderboard(
     .map(([userId, points], idx) => {
       const u = userMap.get(userId);
       if (!u) return null;
-      return { rank: idx + 1, userId, username: u.username, avatarUrl: u.avatarUrl, points };
+      return {
+        rank: idx + 1,
+        userId,
+        username: u.username,
+        avatarUrl: u.avatarUrl,
+        title: u.title,
+        points,
+      };
     })
     .filter((entry): entry is LeaderboardEntry => entry !== null);
 }
