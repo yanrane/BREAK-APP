@@ -84,16 +84,16 @@ describe('assertCompletable', () => {
 });
 
 describe('assertStartWindowOpen', () => {
-  // 2026-07-21T12:00:00Z = 19:00 WIB (UTC+7)
-  it('menolak start pukul 19:00 waktu lokal (CLOSED)', () => {
+  // 2026-07-21T13:00:00Z = 20:00 WIB (UTC+7)
+  it('menolak start pukul 20:00 waktu lokal (CLOSED)', () => {
     expect(() =>
-      assertStartWindowOpen(new Date('2026-07-21T12:00:00Z'), 'Asia/Jakarta'),
+      assertStartWindowOpen(new Date('2026-07-21T13:00:00Z'), 'Asia/Jakarta'),
     ).toThrowError(expect.objectContaining({ code: 'MISSION_START_CLOSED' }));
   });
 
-  it('mengizinkan start pukul 18:59 waktu lokal', () => {
+  it('mengizinkan start pukul 19:59 waktu lokal', () => {
     expect(() =>
-      assertStartWindowOpen(new Date('2026-07-21T11:59:00Z'), 'Asia/Jakarta'),
+      assertStartWindowOpen(new Date('2026-07-21T12:59:00Z'), 'Asia/Jakarta'),
     ).not.toThrow();
   });
 
@@ -118,8 +118,9 @@ describe('assertStartWindowOpen', () => {
   });
 
   it('timezone tidak valid jatuh ke WIB', () => {
+    // 13:00Z = 20:00 WIB → tutup
     expect(() =>
-      assertStartWindowOpen(new Date('2026-07-21T12:00:00Z'), 'Not/AZone'),
+      assertStartWindowOpen(new Date('2026-07-21T13:00:00Z'), 'Not/AZone'),
     ).toThrowError(expect.objectContaining({ code: 'MISSION_START_CLOSED' }));
   });
 

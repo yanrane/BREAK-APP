@@ -12,9 +12,9 @@ export function needsTimer(proofType: ProofTypeValue): boolean {
   return proofType === 'TIMER' || proofType === 'PHOTO_AND_TIMER';
 }
 
-/** Jendela jam mulai misi (jam lokal user): buka 04:00, tutup 19:00. */
+/** Jendela jam mulai misi (jam lokal user): buka 04:00, tutup 20:00. */
 export const MISSION_START_OPEN_HOUR = 4;
-export const MISSION_START_CLOSE_HOUR = 19;
+export const MISSION_START_CLOSE_HOUR = 20;
 
 /** Jam lokal (0–23) pada timezone IANA; fallback WIB kalau timezone tidak valid. */
 export function localHour(now: Date, timeZone?: string): number {
@@ -40,7 +40,7 @@ export function assertStartWindowOpen(now: Date, timeZone?: string): void {
     throw new AppError(
       403,
       'MISSION_START_NOT_OPEN',
-      'Misi belum dibuka. Kamu bisa mulai misi pukul 04:00–19:00.',
+      'Misi belum dibuka. Kamu bisa mulai misi pukul 04:00–20:00.',
     );
   }
   if (hour >= MISSION_START_CLOSE_HOUR) {

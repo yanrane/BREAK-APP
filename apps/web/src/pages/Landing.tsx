@@ -33,7 +33,6 @@ const HOW = [
 const MISSIONS = [
   { e: "🏃", t: "Jogging 15 menit", p: 20, c: "Fisik" },
   { e: "📖", t: "Baca buku 20 halaman", p: 15, c: "Mental" },
-  { e: "📞", t: "Telepon keluarga", p: 10, c: "Sosial" },
   { e: "🌿", t: "Foto alam luar rumah", p: 10, c: "Fisik" },
   { e: "✍️", t: "Jurnal tangan 1 hal.", p: 15, c: "Kreatif" },
   { e: "🧘", t: "Meditasi 10 menit", p: 15, c: "Mental" },

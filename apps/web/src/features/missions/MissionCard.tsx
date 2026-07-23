@@ -30,7 +30,7 @@ interface MissionCardProps {
 
 // Jendela jam mulai misi (jam lokal device) — server memvalidasi ulang, ini hanya UX
 const START_OPEN_HOUR = 4;
-const START_CLOSE_HOUR = 19;
+const START_CLOSE_HOUR = 20;
 
 export default function MissionCard({
   userMission,
@@ -134,7 +134,7 @@ export default function MissionCard({
             {startBlocked && (
               <p className="text-xs font-bold text-muted leading-snug">
                 {beforeOpen
-                  ? "⏰ Misi belum dibuka. Kamu bisa mulai pukul 04:00–19:00."
+                  ? "⏰ Misi belum dibuka. Kamu bisa mulai pukul 04:00–20:00."
                   : "🌙 Pendaftaran misi hari ini sudah ditutup. Mulai lagi besok pukul 04:00."}
               </p>
             )}

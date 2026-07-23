@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 const HOW = [
   { n: '01', title: 'Sadari kebiasaanmu', body: 'BREAK memantau waktu scrolling-mu dan mengingatkan saat sudah kebablasan.' },
-  { n: '02', title: 'Kerjakan misi nyata', body: 'Setiap hari kamu dapat 3 misi dunia nyata — jogging, baca buku, telepon keluarga.' },
+  { n: '02', title: 'Kerjakan misi nyata', body: 'Setiap hari kamu dapat 3 misi dunia nyata — jogging, baca buku, jurnal tangan.' },
   { n: '03', title: 'Jaga streak-mu', body: 'Konsistensi harian membangun streak. Pet virtualmu ikut tumbuh setiap kamu konsisten.' },
   { n: '04', title: 'Latih fokusmu', body: 'Mini games melatih reaksi dan konsentrasi — pengganti dopamin murahan dari scrolling.' },
 ];

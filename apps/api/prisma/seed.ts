@@ -37,17 +37,6 @@ const missions = [
     durationMinutes: 20,
   },
   {
-    slug: 'call-family',
-    title: 'Telepon anggota keluarga 10 menit',
-    description: 'Telepon orang tua, saudara, atau keluarga dekat minimal 10 menit selagi timer berjalan.',
-    category: 'SOCIAL' as const,
-    points: 10,
-    requiresProof: false,
-    cooldownHours: 48,
-    proofType: 'TIMER' as const,
-    durationMinutes: 10,
-  },
-  {
     slug: 'outdoor-photo',
     title: 'Foto pemandangan di luar rumah',
     description: 'Keluar rumah dan jepret foto pemandangan alam, taman, atau lingkungan sekitar langsung dari kamera.',
