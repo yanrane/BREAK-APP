@@ -24,7 +24,9 @@ export const QUESTIONS_PER_DAY = 5;
 
 export const QUIZ_BANK: QuizQuestion[] = [
   // ── UMUM ──
-  { id: 'umum-1', topic: 'UMUM', question: 'Apa ibu kota negara Indonesia saat ini?', options: ['Jakarta', 'Nusantara', 'Bandung', 'Surabaya'], correctIndex: 1 },
+  // Dulu "ibu kota saat ini" (kunci: Nusantara) — status hukumnya masih bergantung
+  // Keppres pemindahan, jadi yang menjawab Jakarta ikut disalahkan. Diganti fakta lokasi.
+  { id: 'umum-1', topic: 'UMUM', question: 'Ibu Kota Nusantara (IKN) dibangun di provinsi?', options: ['Kalimantan Barat', 'Kalimantan Timur', 'Kalimantan Selatan', 'Kalimantan Tengah'], correctIndex: 1 },
   { id: 'umum-2', topic: 'UMUM', question: 'Berapa jumlah pemain satu tim sepak bola di lapangan?', options: ['9', '10', '11', '12'], correctIndex: 2 },
   { id: 'umum-3', topic: 'UMUM', question: 'Organ tubuh manusia yang memompa darah adalah?', options: ['Paru-paru', 'Ginjal', 'Hati', 'Jantung'], correctIndex: 3 },
   { id: 'umum-4', topic: 'UMUM', question: 'Warna pada bendera Indonesia adalah?', options: ['Merah-Putih', 'Putih-Merah', 'Merah-Biru', 'Putih-Biru'], correctIndex: 0 },
@@ -74,7 +76,9 @@ export const QUIZ_BANK: QuizQuestion[] = [
   // ── GEOGRAFI ──
   { id: 'geo-1', topic: 'GEOGRAFI', question: 'Gunung tertinggi di dunia adalah?', options: ['K2', 'Kilimanjaro', 'Everest', 'Elbrus'], correctIndex: 2 },
   { id: 'geo-2', topic: 'GEOGRAFI', question: 'Samudra terluas di dunia adalah?', options: ['Atlantik', 'Hindia', 'Arktik', 'Pasifik'], correctIndex: 3 },
-  { id: 'geo-3', topic: 'GEOGRAFI', question: 'Pulau terbesar di Indonesia adalah?', options: ['Sumatra', 'Kalimantan', 'Papua', 'Sulawesi'], correctIndex: 1 },
+  // Dulu "pulau terbesar di Indonesia" — ambigu: pulau New Guinea utuh lebih luas dari
+  // Borneo, jadi jawaban Papua juga masuk akal. Dipertegas ke luas wilayah Indonesia.
+  { id: 'geo-3', topic: 'GEOGRAFI', question: 'Pulau dengan wilayah Indonesia terluas adalah?', options: ['Sumatra', 'Kalimantan', 'Papua', 'Sulawesi'], correctIndex: 1 },
   { id: 'geo-4', topic: 'GEOGRAFI', question: 'Sungai terpanjang di dunia adalah?', options: ['Amazon', 'Nil', 'Yangtze', 'Mississippi'], correctIndex: 1 },
   { id: 'geo-5', topic: 'GEOGRAFI', question: 'Negara dengan jumlah penduduk terbanyak di dunia (2024) adalah?', options: ['Tiongkok', 'Amerika Serikat', 'India', 'Indonesia'], correctIndex: 2 },
   { id: 'geo-6', topic: 'GEOGRAFI', question: 'Gurun terluas di dunia adalah?', options: ['Gobi', 'Sahara', 'Kalahari', 'Atacama'], correctIndex: 1 },
