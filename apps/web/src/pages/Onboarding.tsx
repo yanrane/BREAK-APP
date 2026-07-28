@@ -14,7 +14,13 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const [gender, setGender] = useState<Gender | null>(null);
   const [locationStatus, setLocationStatus] = useState<PermStatus>('idle');
-  const [notifStatus, setNotifStatus] = useState<PermStatus>('idle');
+  // Baca izin yang sudah ada — kalau tidak, user yang sudah pernah memblokir tetap
+  // melihat tombol "Izinkan" yang tidak melakukan apa-apa saat ditekan.
+  const [notifStatus, setNotifStatus] = useState<PermStatus>(() =>
+    'Notification' in window && Notification.permission !== 'default'
+      ? (Notification.permission as PermStatus)
+      : 'idle',
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,8 +40,16 @@ export default function Onboarding() {
       setNotifStatus('denied');
       return;
     }
-    const result = await Notification.requestPermission();
-    setNotifStatus(result === 'granted' ? 'granted' : 'denied');
+    try {
+      // ponytail: Safari lama masih callback-style → requestPermission() balikin undefined,
+      // Promise.resolve menormalkan keduanya jadi satu jalur.
+      const result = await Promise.resolve(Notification.requestPermission());
+      // 'default' = prompt ditutup tanpa memilih — jangan dicap ditolak, biarkan bisa dicoba lagi.
+      if (result === 'default') return;
+      setNotifStatus(result === 'granted' ? 'granted' : 'denied');
+    } catch {
+      setNotifStatus('denied');
+    }
   }
 
   async function finish() {
@@ -110,15 +124,19 @@ export default function Onboarding() {
               <div>
                 <p className="font-bold text-sm">🔔 Notifikasi</p>
                 <p className="text-xs text-muted font-medium">
-                  Pengingat daily mission, streak, dan event penting.
+                  {notifStatus === 'denied'
+                    ? 'Diblokir browser. Aktifkan lewat ikon 🔒 di address bar, lalu muat ulang halaman.'
+                    : 'Pengingat daily mission, streak, dan event penting.'}
                 </p>
               </div>
               <button
                 onClick={requestNotification}
-                disabled={notifStatus === 'granted'}
+                disabled={notifStatus !== 'idle'}
                 className={cn(
                   'shrink-0 px-3 py-2 text-xs font-extrabold border-2 border-ink transition-colors',
-                  notifStatus === 'granted' ? 'bg-lime-100' : 'hover:bg-ink hover:text-cream',
+                  notifStatus === 'granted' && 'bg-lime-100',
+                  notifStatus === 'denied' && 'bg-cream-2 opacity-60 cursor-not-allowed',
+                  notifStatus === 'idle' && 'hover:bg-ink hover:text-cream',
                 )}
               >
                 {permLabel(notifStatus)}
