@@ -4,6 +4,8 @@ import { requireAuth } from '../middleware/requireAuth';
 import { AppError } from '../lib/appError';
 import prisma from '../lib/prisma';
 import { getReport } from '../services/reportService';
+import { AVATARS, avatarDataUri } from '../lib/avatars';
+import { petLevel } from '../lib/petLevel';
 
 const router: Router = Router();
 
@@ -80,6 +82,40 @@ router.post('/onboarding', requireAuth, async (req, res, next) => {
       }),
     ]);
     res.json({ success: true, data: { user, pet } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const avatarSchema = z.object({ avatarId: z.string().min(1).max(50) });
+
+// PATCH /api/v1/me/avatar — pilih avatar profil (gate: level pet, dicek di server)
+router.patch('/avatar', requireAuth, async (req, res, next) => {
+  const parsed = avatarSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return next(new AppError(400, 'VALIDATION_ERROR', 'avatarId wajib diisi'));
+  }
+  try {
+    const avatar = AVATARS.find((a) => a.id === parsed.data.avatarId);
+    if (!avatar) {
+      return next(new AppError(404, 'AVATAR_NOT_FOUND', 'Avatar tidak dikenal'));
+    }
+    const pet = await prisma.pet.findUnique({
+      where: { userId: req.user!.id },
+      select: { exp: true },
+    });
+    const level = petLevel(pet?.exp ?? 0);
+    if (level < avatar.level) {
+      return next(
+        new AppError(403, 'AVATAR_LOCKED', `Avatar ini terbuka di level pet ${avatar.level}`),
+      );
+    }
+    const user = await prisma.user.update({
+      where: { id: req.user!.id },
+      data: { avatarUrl: avatarDataUri(avatar.emoji) },
+      select: { id: true, username: true, avatarUrl: true },
+    });
+    res.json({ success: true, data: { user } });
   } catch (err) {
     next(err);
   }

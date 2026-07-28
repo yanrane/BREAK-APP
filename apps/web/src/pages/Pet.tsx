@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useReport, petEmoji, RARITY_STYLES, STAGE_LABELS } from '../features/profile/useReport';
 import {
@@ -7,12 +8,29 @@ import {
   prestigeInfo,
   MAX_REWARD_LEVEL,
 } from '../features/pet/petLevel';
+import { AVATARS, avatarDataUri, type Avatar } from '../features/pet/avatars';
+import api from '../lib/api';
 import { cn } from '../lib/cn';
 
 const cardClass = 'border-2 border-ink p-5 shadow-hard bg-cream';
 
 export default function Pet() {
-  const { data, loading, error } = useReport();
+  const { data, loading, error, refetch } = useReport();
+  const [savingAvatar, setSavingAvatar] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  async function chooseAvatar(avatar: Avatar) {
+    setSavingAvatar(avatar.id);
+    setAvatarError(null);
+    try {
+      await api.patch('/me/avatar', { avatarId: avatar.id });
+      await refetch();
+    } catch {
+      setAvatarError('Gagal menyimpan avatar. Coba lagi.');
+    } finally {
+      setSavingAvatar(null);
+    }
+  }
 
   if (loading) return <div className="h-72 border-2 border-ink/20 bg-cream-2 animate-pulse max-w-2xl" />;
   if (error || !data) return <p className="text-coral font-semibold">{error ?? 'Terjadi kesalahan'}</p>;
@@ -95,6 +113,44 @@ export default function Pet() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Avatar profil — terbuka mengikuti level pet */}
+      <div className={cardClass}>
+        <p className="text-xs font-extrabold uppercase tracking-widest text-muted mb-1">
+          Avatar Profil
+        </p>
+        <p className="text-sm text-muted font-semibold mb-3">
+          Terbuka otomatis saat level pet naik. Dipakai di leaderboard dan profil publikmu.
+        </p>
+        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+          {AVATARS.map((a) => {
+            const locked = level < a.level;
+            const active = user.avatarUrl === avatarDataUri(a.emoji);
+            return (
+              <button
+                key={a.id}
+                onClick={() => chooseAvatar(a)}
+                disabled={locked || savingAvatar !== null}
+                title={locked ? `Terbuka di Lv ${a.level}` : a.label}
+                className={cn(
+                  'aspect-square border-2 border-ink flex flex-col items-center justify-center gap-0.5 transition-colors',
+                  active && 'bg-lime',
+                  locked && 'bg-cream-2 opacity-50 cursor-not-allowed',
+                  !locked && !active && 'bg-cream hover:bg-lime-100',
+                )}
+              >
+                <span className="text-2xl" aria-hidden="true">
+                  {locked ? '🔒' : a.emoji}
+                </span>
+                <span className="text-[10px] font-extrabold leading-none">
+                  {locked ? `Lv ${a.level}` : a.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {avatarError && <p className="text-coral text-sm font-semibold mt-2">{avatarError}</p>}
       </div>
 
       {/* Statistik */}
