@@ -58,12 +58,17 @@ export function remainingSeconds(startedAt: Date, durationMinutes: number, now: 
   return Math.max(0, Math.ceil((durationMinutes * 60 * 1000 - elapsedMs) / 1000));
 }
 
+/** Panjang minimum rangkuman bacaan/jurnal (karakter, setelah trim). */
+export const MIN_SUMMARY_LENGTH = 150;
+
 interface CompletableArgs {
   status: MissionStatusValue;
   proofType: ProofTypeValue;
   durationMinutes: number | null;
   startedAt: Date | null;
   hasProof: boolean;
+  requiresSummary: boolean;
+  summary?: string | null;
   now: Date;
 }
 
@@ -72,7 +77,8 @@ interface CompletableArgs {
  * client tidak pernah dipercaya. Throw AppError kalau ada syarat yang gagal.
  */
 export function assertCompletable(args: CompletableArgs): void {
-  const { status, proofType, durationMinutes, startedAt, hasProof, now } = args;
+  const { status, proofType, durationMinutes, startedAt, hasProof, requiresSummary, summary, now } =
+    args;
 
   if (status === 'ASSIGNED') {
     throw new AppError(400, 'MISSION_NOT_STARTED', 'Tekan Start Mission dulu sebelum menyelesaikan misi');
@@ -92,5 +98,12 @@ export function assertCompletable(args: CompletableArgs): void {
   }
   if (needsPhoto(proofType) && !hasProof) {
     throw new AppError(400, 'PROOF_REQUIRED', 'File bukti wajib diunggah');
+  }
+  if (requiresSummary && (summary ?? '').trim().length < MIN_SUMMARY_LENGTH) {
+    throw new AppError(
+      400,
+      'SUMMARY_REQUIRED',
+      `Tulis rangkuman bacaanmu minimal ${MIN_SUMMARY_LENGTH} karakter`,
+    );
   }
 }

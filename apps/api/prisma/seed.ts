@@ -28,13 +28,15 @@ const missions = [
   {
     slug: 'read-20pages',
     title: 'Baca buku fisik 20 halaman',
-    description: 'Baca buku fisik (bukan e-book) minimal 20 menit. Setelah timer selesai, jepret foto halaman yang kamu baca.',
+    description:
+      'Baca buku fisik (bukan e-book) minimal 20 menit. Setelah timer selesai, jepret foto halaman yang kamu baca lalu tulis rangkuman singkat isi bacaannya.',
     category: 'MENTAL' as const,
     points: 15,
     requiresProof: true,
     cooldownHours: 24,
     proofType: 'PHOTO_AND_TIMER' as const,
     durationMinutes: 20,
+    requiresSummary: true,
   },
   {
     slug: 'outdoor-photo',
@@ -50,13 +52,15 @@ const missions = [
   {
     slug: 'handwrite-journal',
     title: 'Tulis jurnal tangan 1 halaman',
-    description: 'Tulis jurnal harian dengan tangan di atas kertas, minimal 1 halaman penuh. Jepret foto tulisanmu.',
+    description:
+      'Tulis jurnal harian dengan tangan di atas kertas, minimal 1 halaman penuh. Jepret foto tulisanmu lalu ringkas isi jurnalmu di kolom rangkuman.',
     category: 'CREATIVE' as const,
     points: 15,
     requiresProof: true,
     cooldownHours: 24,
     proofType: 'PHOTO' as const,
     durationMinutes: null,
+    requiresSummary: true,
   },
   {
     slug: 'meditation-10min',

@@ -130,6 +130,8 @@ model Mission {
   proofType       ProofType       @default(PHOTO)
   durationMinutes Int?
   distanceMeters  Int?
+  /// Misi baca/jurnal wajib disertai rangkuman tulisan user.
+  requiresSummary Boolean         @default(false)
 
   userMissions    UserMission[]
 }
@@ -141,6 +143,12 @@ model UserMission {
   status       MissionStatus
   proofUrl     String?
   proofHash    String?       @unique
+  /// Rangkuman bacaan/tulisan untuk misi dengan requiresSummary.
+  summary      String?
+  /// Hasil recognition foto (async, hanya penanda — tidak memblokir verifikasi).
+  proofCheckMatch  Boolean?
+  proofCheckScore  Int?
+  proofCheckReason String?
   pointsEarned Int           @default(0)
   exitAttempts Int           @default(0)
   gpsDistanceM Int?

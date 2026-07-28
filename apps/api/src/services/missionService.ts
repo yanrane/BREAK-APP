@@ -114,6 +114,7 @@ export async function completeMission(
   userMissionId: string,
   proofPath?: string,
   proofHash?: string,
+  summary?: string,
 ) {
   const userMission = await prisma.userMission.findUnique({
     where: { id: userMissionId },
@@ -137,6 +138,8 @@ export async function completeMission(
     durationMinutes: userMission.mission.durationMinutes,
     startedAt: userMission.startedAt,
     hasProof: Boolean(proofPath && proofHash),
+    requiresSummary: userMission.mission.requiresSummary,
+    summary,
     now,
   });
 
@@ -150,6 +153,7 @@ export async function completeMission(
           status: 'VERIFIED',
           proofUrl: proofPath ?? null,
           proofHash: proofHash ?? null,
+          summary: summary?.trim() ?? null,
           completedAt: now,
           verifiedAt: now,
           pointsEarned: userMission.mission.points,

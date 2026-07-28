@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { requireAuth } from '../middleware/requireAuth';
 import { uploadProofMiddleware } from '../middleware/uploadProof';
 import { AppError } from '../lib/appError';
+import { checkProofPhoto } from '../lib/photoCheck';
+import prisma from '../lib/prisma';
 import {
   getTodayMissions,
   startMission,
@@ -32,6 +34,39 @@ const completeGpsSchema = z.object({
 });
 
 const router: Router = Router();
+
+/** Jalankan recognition foto lalu simpan hasilnya; kegagalan tidak boleh mengganggu apa pun. */
+async function runProofCheck(args: {
+  userMissionId: string;
+  buffer: Buffer;
+  mime: 'image/jpeg' | 'image/png' | 'image/webp';
+}): Promise<void> {
+  try {
+    const um = await prisma.userMission.findUnique({
+      where: { id: args.userMissionId },
+      select: { mission: { select: { title: true, description: true } } },
+    });
+    if (!um) return;
+
+    const result = await checkProofPhoto({
+      buffer: args.buffer,
+      mime: args.mime,
+      missionTitle: um.mission.title,
+      missionDescription: um.mission.description,
+    });
+    if (!result) return; // recognition mati atau gagal — biarkan kolomnya null
+    await prisma.userMission.update({
+      where: { id: args.userMissionId },
+      data: {
+        proofCheckMatch: result.match,
+        proofCheckScore: result.score,
+        proofCheckReason: result.reason,
+      },
+    });
+  } catch (err) {
+    console.error('[proofCheck] gagal menyimpan hasil:', err);
+  }
+}
 
 // GET /api/v1/missions/today
 router.get('/today', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
@@ -111,13 +146,27 @@ router.post(
   ...uploadProofMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Field teks ikut multipart; batasi panjangnya sebelum masuk service
+      const summary =
+        typeof req.body?.summary === 'string' ? req.body.summary.slice(0, 5000) : undefined;
       const updated = await completeMission(
         req.user!.id,
         req.params.userMissionId,
         req.proofPath,
         req.proofHash,
+        summary,
       );
       res.json({ success: true, data: updated });
+
+      // Recognition jalan setelah respons dikirim — murni penanda untuk ditinjau,
+      // jadi user tidak perlu menunggu panggilan model selesai.
+      if (req.proofBuffer && req.proofMime) {
+        void runProofCheck({
+          userMissionId: updated.id,
+          buffer: req.proofBuffer,
+          mime: req.proofMime,
+        });
+      }
     } catch (err) {
       // Bersihkan file yatim kalau complete ditolak — dup/timer adalah jalur normal,
       // tanpa ini storage prod tumbuh terus tiap percobaan yang gagal

@@ -3,13 +3,19 @@ import { useEffect, useRef, useState } from 'react';
 interface CameraCaptureProps {
   isSubmitting: boolean;
   onCapture: (file: File) => void;
+  /** Blokir pengiriman selama syarat lain belum lengkap (mis. rangkuman bacaan). */
+  blockedReason?: string;
 }
 
 /**
  * Panel kamera live — bukti misi WAJIB dijepret di sini, tidak ada input galeri
  * (aturan anti-curang: foto lama/orang lain tidak bisa dipakai).
  */
-export default function CameraCapture({ isSubmitting, onCapture }: CameraCaptureProps) {
+export default function CameraCapture({
+  isSubmitting,
+  onCapture,
+  blockedReason,
+}: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
@@ -88,12 +94,16 @@ export default function CameraCapture({ isSubmitting, onCapture }: CameraCapture
             </button>
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || Boolean(blockedReason)}
+              title={blockedReason}
               className="flex-1 py-2.5 text-sm font-extrabold border-2 border-ink bg-ink text-cream shadow-hard-sm disabled:opacity-50"
             >
               {isSubmitting ? 'Mengirim…' : 'Kirim Bukti →'}
             </button>
           </div>
+          {blockedReason && (
+            <p className="text-xs font-bold text-coral">{blockedReason}</p>
+          )}
         </>
       ) : (
         <>

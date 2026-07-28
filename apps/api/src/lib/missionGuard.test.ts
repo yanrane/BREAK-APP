@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { AppError } from './appError';
-import { needsPhoto, needsTimer, remainingSeconds, assertCompletable, assertStartWindowOpen } from './missionGuard';
+import { needsPhoto, needsTimer, remainingSeconds, assertCompletable, assertStartWindowOpen, MIN_SUMMARY_LENGTH } from './missionGuard';
 
 const NOW = new Date('2026-07-12T10:00:00Z');
 
@@ -37,11 +37,46 @@ describe('assertCompletable', () => {
     durationMinutes: 15,
     startedAt: new Date(NOW.getTime() - 16 * 60 * 1000),
     hasProof: true,
+    requiresSummary: false,
     now: NOW,
   };
 
   it('lolos saat semua syarat terpenuhi', () => {
     expect(() => assertCompletable(base)).not.toThrow();
+  });
+
+  describe('rangkuman wajib (misi baca/jurnal)', () => {
+    const longEnough = 'a'.repeat(MIN_SUMMARY_LENGTH);
+
+    it('menolak saat rangkuman kosong', () => {
+      expect(() => assertCompletable({ ...base, requiresSummary: true })).toThrow(
+        /rangkuman/i,
+      );
+    });
+
+    it('menolak saat rangkuman terlalu pendek', () => {
+      expect(() =>
+        assertCompletable({ ...base, requiresSummary: true, summary: 'pendek' }),
+      ).toThrow(/rangkuman/i);
+    });
+
+    it('menolak rangkuman yang hanya spasi', () => {
+      expect(() =>
+        assertCompletable({ ...base, requiresSummary: true, summary: ' '.repeat(300) }),
+      ).toThrow(/rangkuman/i);
+    });
+
+    it('lolos saat rangkuman cukup panjang', () => {
+      expect(() =>
+        assertCompletable({ ...base, requiresSummary: true, summary: longEnough }),
+      ).not.toThrow();
+    });
+
+    it('mengabaikan rangkuman untuk misi yang tidak mewajibkannya', () => {
+      expect(() =>
+        assertCompletable({ ...base, requiresSummary: false, summary: undefined }),
+      ).not.toThrow();
+    });
   });
 
   it('MISSION_NOT_STARTED kalau status masih ASSIGNED', () => {
