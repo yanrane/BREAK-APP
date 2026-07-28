@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { AppError } from './appError';
-import { needsPhoto, needsTimer, remainingSeconds, assertCompletable, assertStartWindowOpen, MIN_SUMMARY_LENGTH } from './missionGuard';
+import { needsPhoto, needsTimer, remainingSeconds, assertCompletable, assertStartWindowOpen, MIN_SUMMARY_LENGTH, MISSION_START_OPEN_HOUR, MISSION_START_CLOSE_HOUR } from './missionGuard';
 
 const NOW = new Date('2026-07-12T10:00:00Z');
 
@@ -119,17 +119,28 @@ describe('assertCompletable', () => {
 });
 
 describe('assertStartWindowOpen', () => {
-  // 2026-07-21T13:00:00Z = 20:00 WIB (UTC+7)
-  it('menolak start pukul 20:00 waktu lokal (CLOSED)', () => {
+  it('jendelanya 04:00–08:00', () => {
+    expect(MISSION_START_OPEN_HOUR).toBe(4);
+    expect(MISSION_START_CLOSE_HOUR).toBe(8);
+  });
+
+  // 2026-07-21T01:00:00Z = 08:00 WIB (UTC+7)
+  it('menolak start tepat pukul 08:00 waktu lokal (CLOSED)', () => {
     expect(() =>
-      assertStartWindowOpen(new Date('2026-07-21T13:00:00Z'), 'Asia/Jakarta'),
+      assertStartWindowOpen(new Date('2026-07-21T01:00:00Z'), 'Asia/Jakarta'),
     ).toThrowError(expect.objectContaining({ code: 'MISSION_START_CLOSED' }));
   });
 
-  it('mengizinkan start pukul 19:59 waktu lokal', () => {
+  it('mengizinkan start pukul 07:59 waktu lokal', () => {
     expect(() =>
-      assertStartWindowOpen(new Date('2026-07-21T12:59:00Z'), 'Asia/Jakarta'),
+      assertStartWindowOpen(new Date('2026-07-21T00:59:00Z'), 'Asia/Jakarta'),
     ).not.toThrow();
+  });
+
+  it('menolak start siang hari (12:00 WIB, sudah lewat jendela)', () => {
+    expect(() =>
+      assertStartWindowOpen(new Date('2026-07-21T05:00:00Z'), 'Asia/Jakarta'),
+    ).toThrowError(expect.objectContaining({ code: 'MISSION_START_CLOSED' }));
   });
 
   // 2026-07-21T20:30:00Z = 03:30 WIB besoknya
@@ -145,21 +156,36 @@ describe('assertStartWindowOpen', () => {
     ).not.toThrow();
   });
 
+  it('jendela berulang tiap hari: 05:00 buka, 09:00 tutup, 14 hari berturut-turut', () => {
+    for (let d = 0; d < 14; d++) {
+      const dayMs = d * 24 * 60 * 60 * 1000;
+      // 22:00Z = 05:00 WIB keesokan harinya → di dalam jendela
+      const inWindow = new Date(new Date('2026-07-20T22:00:00Z').getTime() + dayMs);
+      expect(() => assertStartWindowOpen(inWindow, 'Asia/Jakarta')).not.toThrow();
+
+      // 02:00Z = 09:00 WIB hari yang sama → sudah lewat jendela
+      const afterWindow = new Date(new Date('2026-07-21T02:00:00Z').getTime() + dayMs);
+      expect(() => assertStartWindowOpen(afterWindow, 'Asia/Jakarta')).toThrowError(
+        expect.objectContaining({ code: 'MISSION_START_CLOSED' }),
+      );
+    }
+  });
+
   it('menghormati timezone user, bukan WIB (New York UTC-4 saat DST)', () => {
-    // 14:00Z = 10:00 New York (boleh) tapi 21:00 WIB (tutup)
+    // 10:00Z = 06:00 New York (boleh) tapi 17:00 WIB (tutup)
     expect(() =>
-      assertStartWindowOpen(new Date('2026-07-21T14:00:00Z'), 'America/New_York'),
+      assertStartWindowOpen(new Date('2026-07-21T10:00:00Z'), 'America/New_York'),
     ).not.toThrow();
   });
 
   it('timezone tidak valid jatuh ke WIB', () => {
-    // 13:00Z = 20:00 WIB → tutup
+    // 01:00Z = 08:00 WIB → tutup
     expect(() =>
-      assertStartWindowOpen(new Date('2026-07-21T13:00:00Z'), 'Not/AZone'),
+      assertStartWindowOpen(new Date('2026-07-21T01:00:00Z'), 'Not/AZone'),
     ).toThrowError(expect.objectContaining({ code: 'MISSION_START_CLOSED' }));
   });
 
   it('timezone kosong jatuh ke WIB', () => {
-    expect(() => assertStartWindowOpen(new Date('2026-07-21T02:00:00Z'))).not.toThrow(); // 09:00 WIB
+    expect(() => assertStartWindowOpen(new Date('2026-07-21T00:00:00Z'))).not.toThrow(); // 07:00 WIB
   });
 });

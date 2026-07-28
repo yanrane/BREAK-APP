@@ -1,5 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useTodayMissions } from '../features/missions/useMissions';
+import {
+  useTodayMissions,
+  MISSION_START_OPEN_HOUR,
+  MISSION_START_CLOSE_HOUR,
+  fmtMissionHour,
+} from '../features/missions/useMissions';
 import MissionCard from '../features/missions/MissionCard';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') ?? '';
@@ -64,7 +69,10 @@ export default function Missions() {
             />
           ))}
           <div className="flex items-center justify-between pt-2">
-            <p className="text-xs text-muted font-semibold">Reset setiap 00:00 WIB</p>
+            <p className="text-xs text-muted font-semibold">
+              Misi dibuka {fmtMissionHour(MISSION_START_OPEN_HOUR)}–
+              {fmtMissionHour(MISSION_START_CLOSE_HOUR)} tiap hari
+            </p>
             <Link to="/missions/history" className="text-xs font-extrabold underline decoration-lime decoration-2">
               Riwayat →
             </Link>

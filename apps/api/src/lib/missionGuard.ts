@@ -12,9 +12,16 @@ export function needsTimer(proofType: ProofTypeValue): boolean {
   return proofType === 'TIMER' || proofType === 'PHOTO_AND_TIMER';
 }
 
-/** Jendela jam mulai misi (jam lokal user): buka 04:00, tutup 20:00. */
+/**
+ * Jendela jam mulai misi (jam lokal user): buka 04:00, tutup 08:00.
+ * Berulang tiap hari — guard ini hanya melihat jam lokal, jadi jendelanya
+ * otomatis tertutup pukul 08:00 dan terbuka lagi pukul 04:00 esok harinya.
+ */
 export const MISSION_START_OPEN_HOUR = 4;
-export const MISSION_START_CLOSE_HOUR = 20;
+export const MISSION_START_CLOSE_HOUR = 8;
+
+/** "04:00" — jam pesan selalu diturunkan dari konstanta di atas supaya tidak drift. */
+const fmtHour = (h: number) => `${String(h).padStart(2, '0')}:00`;
 
 /** Jam lokal (0–23) pada timezone IANA; fallback WIB kalau timezone tidak valid. */
 export function localHour(now: Date, timeZone?: string): number {
@@ -31,23 +38,25 @@ export function localHour(now: Date, timeZone?: string): number {
 }
 
 /**
- * Misi baru hanya boleh dimulai pukul 04:00–20:00 waktu lokal user.
- * Hanya untuk start baru — resume sesi IN_PROGRESS tidak melewati guard ini.
+ * Misi baru hanya boleh dimulai pukul 04:00–08:00 waktu lokal user, tiap hari.
+ * Hanya untuk start baru — resume sesi IN_PROGRESS tidak melewati guard ini,
+ * jadi misi yang sudah jalan sebelum pukul 08:00 tetap bisa diselesaikan.
  */
 export function assertStartWindowOpen(now: Date, timeZone?: string): void {
   const hour = localHour(now, timeZone);
+  const window = `${fmtHour(MISSION_START_OPEN_HOUR)}–${fmtHour(MISSION_START_CLOSE_HOUR)}`;
   if (hour < MISSION_START_OPEN_HOUR) {
     throw new AppError(
       403,
       'MISSION_START_NOT_OPEN',
-      'Misi belum dibuka. Kamu bisa mulai misi pukul 04:00–20:00.',
+      `Misi belum dibuka. Kamu bisa mulai misi pukul ${window}.`,
     );
   }
   if (hour >= MISSION_START_CLOSE_HOUR) {
     throw new AppError(
       403,
       'MISSION_START_CLOSED',
-      'Pendaftaran misi hari ini sudah ditutup. Kamu bisa mulai lagi besok pukul 04:00.',
+      `Pendaftaran misi hari ini sudah ditutup. Kamu bisa mulai lagi besok pukul ${fmtHour(MISSION_START_OPEN_HOUR)}.`,
     );
   }
 }

@@ -27,7 +27,7 @@ export async function getTodayMissions(userId: string) {
  * Idempoten — kalau sudah IN_PROGRESS, kembalikan sesi berjalan (resume).
  * serverNow dikirim agar client bisa kalibrasi countdown tanpa percaya jam device.
  * timezone (IANA, dari client) hanya dipakai untuk jendela jam mulai — start baru
- * ditolak di luar 04:00–20:00 waktu lokal user; resume tidak terpengaruh.
+ * ditolak di luar 04:00–08:00 waktu lokal user; resume tidak terpengaruh.
  */
 export async function startMission(userId: string, userMissionId: string, timezone?: string) {
   const userMission = await prisma.userMission.findUnique({

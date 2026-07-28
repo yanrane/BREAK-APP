@@ -1,5 +1,10 @@
 import { cn } from "../../lib/cn";
 import type { UserMission } from "./useMissions";
+import {
+  MISSION_START_OPEN_HOUR as START_OPEN_HOUR,
+  MISSION_START_CLOSE_HOUR as START_CLOSE_HOUR,
+  fmtMissionHour,
+} from "./useMissions";
 
 const CATEGORY_ICON: Record<string, string> = {
   PHYSICAL: "🏃",
@@ -29,8 +34,6 @@ interface MissionCardProps {
 }
 
 // Jendela jam mulai misi (jam lokal device) — server memvalidasi ulang, ini hanya UX
-const START_OPEN_HOUR = 4;
-const START_CLOSE_HOUR = 20;
 
 export default function MissionCard({
   userMission,
@@ -134,8 +137,8 @@ export default function MissionCard({
             {startBlocked && (
               <p className="text-xs font-bold text-muted leading-snug">
                 {beforeOpen
-                  ? "⏰ Misi belum dibuka. Kamu bisa mulai pukul 04:00–20:00."
-                  : "🌙 Pendaftaran misi hari ini sudah ditutup. Mulai lagi besok pukul 04:00."}
+                  ? `⏰ Misi belum dibuka. Kamu bisa mulai pukul ${fmtMissionHour(START_OPEN_HOUR)}–${fmtMissionHour(START_CLOSE_HOUR)}.`
+                  : `🌙 Pendaftaran misi hari ini sudah ditutup. Mulai lagi besok pukul ${fmtMissionHour(START_OPEN_HOUR)}.`}
               </p>
             )}
           </div>

@@ -18,6 +18,11 @@ export interface Mission {
 /** Cermin MIN_SUMMARY_LENGTH dari API (apps/api/src/lib/missionGuard.ts). */
 export const MIN_SUMMARY_LENGTH = 150;
 
+/** Cermin jendela jam mulai misi dari API — buka 04:00, tutup 08:00, tiap hari. */
+export const MISSION_START_OPEN_HOUR = 4;
+export const MISSION_START_CLOSE_HOUR = 8;
+export const fmtMissionHour = (h: number) => `${String(h).padStart(2, '0')}:00`;
+
 export interface GpsPoint {
   lat: number;
   lng: number;
