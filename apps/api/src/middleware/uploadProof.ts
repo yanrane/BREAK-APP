@@ -37,6 +37,8 @@ export const uploadProofMiddleware: RequestHandler[] = [
       }
 
       req.proofHash = createHash('sha256').update(req.file.buffer).digest('hex');
+      req.proofBuffer = req.file.buffer;
+      req.proofMime = detected.mime as 'image/jpeg' | 'image/png' | 'image/webp';
 
       const filename = `${crypto.randomUUID()}.${detected.ext}`;
 
@@ -48,6 +50,16 @@ export const uploadProofMiddleware: RequestHandler[] = [
           contentType: detected.mime,
         });
         req.proofPath = blob.url;
+      } else if (process.env.VERCEL) {
+        // Filesystem Vercel read-only — cabang disk di bawah tidak akan pernah berhasil.
+        // Gagal di sini dengan pesan jelas, bukan EROFS yang tersamar jadi "Gagal menyimpan file".
+        return next(
+          new AppError(
+            500,
+            'BLOB_STORAGE_NOT_CONFIGURED',
+            'Penyimpanan foto belum dikonfigurasi di server. Hubungi admin.',
+          ),
+        );
       } else {
         // Local disk storage (development)
         const uploadDir = process.env.UPLOAD_DIR ?? './uploads';

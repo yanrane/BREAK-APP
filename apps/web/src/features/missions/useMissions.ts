@@ -12,7 +12,11 @@ export interface Mission {
   proofType: 'PHOTO' | 'TIMER' | 'PHOTO_AND_TIMER' | 'GPS';
   durationMinutes: number | null;
   distanceMeters: number | null;
+  requiresSummary: boolean;
 }
+
+/** Cermin MIN_SUMMARY_LENGTH dari API (apps/api/src/lib/missionGuard.ts). */
+export const MIN_SUMMARY_LENGTH = 150;
 
 export interface GpsPoint {
   lat: number;
@@ -80,15 +84,21 @@ export function useTodayMissions() {
     return res.data.data;
   };
 
-  const completeMission = async (userMissionId: string, proofFile?: File): Promise<UserMission> => {
+  const completeMission = async (
+    userMissionId: string,
+    proofFile?: File,
+    summary?: string,
+  ): Promise<UserMission> => {
     let res;
-    if (proofFile) {
+    if (proofFile || summary) {
       const formData = new FormData();
-      formData.append('proof', proofFile);
+      if (proofFile) formData.append('proof', proofFile);
+      if (summary) formData.append('summary', summary);
+      // Content-Type sengaja tidak diset — browser yang menuliskannya lengkap
+      // dengan boundary multipart; menimpanya bikin body tidak bisa diparse
       res = await api.post<{ success: true; data: UserMission }>(
         `/missions/${userMissionId}/complete`,
         formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
       );
     } else {
       res = await api.post<{ success: true; data: UserMission }>(

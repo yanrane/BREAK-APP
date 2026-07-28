@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useTodayMissions } from '../features/missions/useMissions';
+import { useTodayMissions, MIN_SUMMARY_LENGTH } from '../features/missions/useMissions';
 import CameraCapture from '../features/missions/CameraCapture';
 import GpsMissionSession from '../features/missions/GpsMissionSession';
 import Confetti from '../components/Confetti';
 import api from '../lib/api';
+import { cn } from '../lib/cn';
 
 type Phase = 'ready' | 'countdown' | 'capture' | 'done';
 
@@ -28,9 +29,11 @@ export default function MissionSession() {
   const [paused, setPaused] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [summary, setSummary] = useState('');
 
   const userMission = missions.find((m) => m.id === userMissionId);
   const mission = userMission?.mission;
+  const summaryDone = summary.trim().length >= MIN_SUMMARY_LENGTH;
   const hasTimer = mission ? mission.proofType !== 'PHOTO' : false;
   const hasPhoto = mission ? mission.proofType !== 'TIMER' : false;
 
@@ -128,7 +131,7 @@ export default function MissionSession() {
     try {
       setIsSubmitting(true);
       setSubmitError(null);
-      await completeMission(userMissionId, file);
+      await completeMission(userMissionId, file, summary.trim() || undefined);
       exitFullscreen();
       navigate('/missions');
     } catch (err: unknown) {
@@ -149,6 +152,10 @@ export default function MissionSession() {
         setPhase('countdown');
       } else if (code === 'PROOF_DUPLICATE') {
         setSubmitError('Foto ini sudah pernah dipakai. Jepret foto baru ya.');
+      } else if (code === 'SUMMARY_REQUIRED') {
+        setSubmitError(`Rangkumanmu masih terlalu pendek (minimal ${MIN_SUMMARY_LENGTH} karakter).`);
+      } else if (code === 'BLOB_STORAGE_NOT_CONFIGURED') {
+        setSubmitError('Server belum siap menerima foto. Laporkan ke admin ya.');
       } else {
         setSubmitError('Gagal menyelesaikan misi. Coba lagi.');
       }
@@ -262,17 +269,42 @@ export default function MissionSession() {
         </div>
       )}
 
+      {mission.requiresSummary && (phase === 'capture' || phase === 'done') && (
+        <div className="space-y-2 mb-4">
+          <p className="text-label">Rangkuman — tulis dengan kata-katamu sendiri</p>
+          <textarea
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            rows={6}
+            placeholder="Apa isi bacaan/tulisanmu tadi? Poin apa yang paling nempel?"
+            className="w-full p-3 text-sm font-medium border-2 border-ink bg-cream resize-y focus:outline-none focus:bg-cream-2"
+          />
+          <p className={cn('text-xs font-bold', summaryDone ? 'text-muted' : 'text-coral')}>
+            {summary.trim().length}/{MIN_SUMMARY_LENGTH} karakter
+            {summaryDone && ' ✓'}
+          </p>
+        </div>
+      )}
+
       {phase === 'capture' && (
         <div className="space-y-3">
           <p className="text-label">Bukti Misi — jepret langsung dari kamera</p>
-          <CameraCapture isSubmitting={isSubmitting} onCapture={(file) => handleComplete(file)} />
+          <CameraCapture
+            isSubmitting={isSubmitting}
+            onCapture={(file) => handleComplete(file)}
+            blockedReason={
+              mission.requiresSummary && !summaryDone
+                ? `Tulis rangkuman minimal ${MIN_SUMMARY_LENGTH} karakter dulu.`
+                : undefined
+            }
+          />
         </div>
       )}
 
       {phase === 'done' && (
         <button
           onClick={() => handleComplete()}
-          disabled={isSubmitting}
+          disabled={isSubmitting || (mission.requiresSummary && !summaryDone)}
           className="w-full py-4 text-lg font-extrabold border-2 border-ink bg-lime shadow-hard disabled:opacity-50"
         >
           {isSubmitting ? 'Mengirim…' : '✓ Selesaikan Misi'}
