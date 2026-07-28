@@ -31,7 +31,7 @@ export function localHour(now: Date, timeZone?: string): number {
 }
 
 /**
- * Misi baru hanya boleh dimulai pukul 04:00–19:00 waktu lokal user.
+ * Misi baru hanya boleh dimulai pukul 04:00–20:00 waktu lokal user.
  * Hanya untuk start baru — resume sesi IN_PROGRESS tidak melewati guard ini.
  */
 export function assertStartWindowOpen(now: Date, timeZone?: string): void {
